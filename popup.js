@@ -6,7 +6,7 @@
 
 let groupButton = document.getElementById('groupButton');
 
-
+/*
 let logger = chrome.extension.getBackgroundPage().console.log
 let bgPage = chrome.extension.getBackgroundPage();
 
@@ -28,3 +28,5 @@ groupButton.onclick = (element) => {
     });
   });
 };
+
+*/
