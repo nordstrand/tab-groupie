@@ -48,28 +48,24 @@ let getHost = (tab) => new URL(tab.url).hostname
 let groupByHost = (tabs) => tabs.reduce((hash, obj) => ({ ...hash, [getHost(obj)]: (hash[getHost(obj)] || []).concat(obj) }), {})
 let logger = console.log
 
-let group = () => {
+let group = async () => {
   console.log("do stuff")
-  chrome.windows.getCurrent(function (currentWindow) {
-    chrome.tabs.query({ windowId: currentWindow.id, groupId: -1 }, function (tabs) {
-      logger("Creating groups..", tabs)
+  let currentWindow = await chrome.windows.getCurrent()
+  let tabs = await chrome.tabs.query({ windowId: currentWindow.id, groupId: -1 })
+  logger("Creating groups..", tabs)
 
-      let tabsGroupedByHostname = groupByHost(tabs.filter((el) => el.groupId == -1))
+  let unGroupedTabsByHostname = groupByHost(tabs.filter((el) => el.groupId == -1))
 
-      Object.keys(tabsGroupedByHostname).forEach(hostname => {
-        let tabsForHostname = tabsGroupedByHostname[hostname]
-
-        findGroupIdForHostname(tabs, hostname, (preExistingGroupId) => {
-          if (tabsForHostname.length > 1 || !!preExistingGroupId) {  //Do not group if there only ONE tab with hostname
-            chrome.tabs.group({ groupId: preExistingGroupId, tabIds: tabsForHostname.map((t) => t.id) }, (groupId) => {
-              logger(`${!!preExistingGroupId ? "Added to" : "Created"} group ${groupId} for ${getHost(tabsForHostname[0])} (${tabsForHostname.length})`)
-            });
-          }
+  Object.keys(unGroupedTabsByHostname).forEach(hostname => {
+    let tabsForHostname = unGroupedTabsByHostname[hostname]
+    findGroupIdForHostname(tabs, hostname, (preExistingGroupId) => {
+      if (tabsForHostname.length > 1 || !!preExistingGroupId) {  //Do not group if there only ONE tab with a certain hostname
+        chrome.tabs.group({ groupId: preExistingGroupId, tabIds: tabsForHostname.map((t) => t.id) }, (groupId) => {
+          logger(`${!!preExistingGroupId ? "Added to" : "Created"} group ${groupId} for ${getHost(tabsForHostname[0])} (${tabsForHostname.length})`)
         });
-
-      });
+      }
     });
-  });
+  })
 }
 
 let findGroupIdForHostname = (tabs, hostname, cb) => {
