@@ -1,11 +1,8 @@
-// Copyright 2018 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
 
-'use strict';
 
 
 console.log("DOH")
+
 
 chrome.action.setBadgeText({ text: "AUTO" })
 
@@ -78,3 +75,43 @@ let findGroupIdForHostname = (tabs, hostname) => {
 }
 
 chrome.action.onClicked.addListener(group)
+
+
+chrome.storage.local.get(["mode"], (result)  => {
+  let value = result.mode
+  console.log("INIT mote", value)
+  if (! value) {
+    chrome.storage.local.set({'mode': 'AUTO'})
+  }  
+})
+
+chrome.storage.onChanged.addListener(function(changes, namespace) {
+  for (var key in changes) {
+    var storageChange = changes[key];
+    console.log('Storage key "%s" in namespace "%s" changed. ' +
+                'Old value was "%s", new value is "%s".',
+                key,
+                namespace,
+                storageChange.oldValue,
+                storageChange.newValue);
+    if (key=='mode') {
+      chrome.action.setBadgeText({ text: storageChange.newValue })
+    }
+  }
+});
+
+let toggleMode = () => {
+  chrome.storage.local.get(["mode"], (result)  => {
+    let value = result.mode
+    console.log("INIT mode", value )
+    if (!!value) {
+      chrome.storage.local.set({'mode':  value == 'AUTO' ? 'MAN' : 'AUTO'})
+    }
+  })
+} 
+
+
+chrome.commands.onCommand.addListener((command) => {
+  console.log('Command:', command);
+  toggleMode()
+});

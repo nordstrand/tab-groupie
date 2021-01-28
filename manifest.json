@@ -21,5 +21,14 @@
     "48": "images/get_started48.png",
     "128": "images/get_started128.png"
   },
-  "manifest_version": 3
+  "manifest_version": 3,
+  "commands": {
+    "toggle-mode": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
+      },
+      "description": "Toggle mode"
+    }
+  }
 }
