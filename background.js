@@ -7,7 +7,7 @@
 
 console.log("DOH")
 
-chrome.action.setBadgeText({ text: "doh" })
+chrome.action.setBadgeText({ text: "AUTO" })
 
 chrome.runtime.onMessage.addListener(({ type, name }) => {
   console.log("Message received: " + name)
@@ -15,7 +15,19 @@ chrome.runtime.onMessage.addListener(({ type, name }) => {
 
 });
 
-//chrome.action.onClicked.addListener(group);
+chrome.tabs.onCreated.addListener((createdTab) => {
+  console.log("New tab", createdTab)
+
+  let listener = (tabId, _, tab) => {
+    if (tabId == createdTab.id && tab.url.startsWith("http")) {
+      chrome.tabs.onUpdated.removeListener(listener)
+      console.log("Update", tab, getHost(tab))
+      group()
+    }
+  }
+
+  chrome.tabs.onUpdated.addListener(listener)
+})
 
 /*
 chrome.runtime.onInstalled.addListener(function() {
@@ -31,16 +43,6 @@ chrome.runtime.onInstalled.addListener(function() {
     }]);
   });
 
-
-  var tabIds = [] 
-
-  chrome.windows.getCurrent(function (currentWindow) {
-    chrome.tabs.query({  windowId: currentWindow.id }, function (activeTabs) {
-  
-      console.log(groupByHost(activeTabs))
-    });
-  });
-
 });
 */
 
@@ -48,8 +50,7 @@ let getHost = (tab) => new URL(tab.url).hostname
 let groupByHost = (tabs) => tabs.reduce((hash, obj) => ({ ...hash, [getHost(obj)]: (hash[getHost(obj)] || []).concat(obj) }), {})
 let logger = console.log
 
-let group = async () => {
-  console.log("do stuff")
+let group = async () => {  
   let currentWindow = await chrome.windows.getCurrent()
   let tabs = await chrome.tabs.query({ windowId: currentWindow.id, groupId: -1 })
   logger("Creating groups..", tabs)
@@ -58,25 +59,22 @@ let group = async () => {
 
   Object.keys(unGroupedTabsByHostname).forEach(hostname => {
     let tabsForHostname = unGroupedTabsByHostname[hostname]
-    findGroupIdForHostname(tabs, hostname, (preExistingGroupId) => {
-      if (tabsForHostname.length > 1 || !!preExistingGroupId) {  //Do not group if there only ONE tab with a certain hostname
-        chrome.tabs.group({ groupId: preExistingGroupId, tabIds: tabsForHostname.map((t) => t.id) }, (groupId) => {
-          logger(`${!!preExistingGroupId ? "Added to" : "Created"} group ${groupId} for ${getHost(tabsForHostname[0])} (${tabsForHostname.length})`)
-        });
-      }
-    });
+    let preExistingGroupId = findGroupIdForHostname(tabs, hostname)
+    if (tabsForHostname.length > 1 || !!preExistingGroupId) {  //Do not group if there only ONE tab with a certain hostname
+      chrome.tabs.group({ groupId: preExistingGroupId, tabIds: tabsForHostname.map((t) => t.id) }, (groupId) => {
+        logger(`${!!preExistingGroupId ? "Added to" : "Created"} group ${groupId} for ${getHost(tabsForHostname[0])} (${tabsForHostname.length})`)
+      });
+    }
   })
 }
 
-let findGroupIdForHostname = (tabs, hostname, cb) => {
+let findGroupIdForHostname = (tabs, hostname) => {
   let existingGroups = [...new Set(tabs.map((t) => t.groupId).filter((groupId) => groupId != -1))]
   console.log("existing groups", existingGroups)
-  let g = existingGroups.find(groupId =>
+  return existingGroups.find(groupId =>
     tabs
       .filter((t) => t.groupId == groupId)
       .every((t) => getHost(t) == hostname))
-  console.log("USE", g)
-  cb(g)
 }
 
 chrome.action.onClicked.addListener(group)
