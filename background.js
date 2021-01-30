@@ -1,7 +1,4 @@
-
-
-
-console.log("DOH")
+importScripts("./util.js")
 
 
 chrome.action.setBadgeText({ text: "AUTO" })
@@ -77,11 +74,13 @@ let findGroupIdForHostname = (tabs, hostname) => {
 chrome.action.onClicked.addListener(group)
 
 
+let mode = storedField(chrome.storage.local, "mode")
+
 chrome.storage.local.get(["mode"], (result)  => {
   let value = result.mode
   console.log("INIT mote", value)
   if (! value) {
-    chrome.storage.local.set({'mode': 'AUTO'})
+    chrome.storage.local.set({'mode': getKeyByValue(MODE.AUTO)})
   }  
 })
 
@@ -100,16 +99,11 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
   }
 });
 
-let toggleMode = () => {
-  chrome.storage.local.get(["mode"], (result)  => {
-    let value = result.mode
-    console.log("INIT mode", value )
-    if (!!value) {
-      chrome.storage.local.set({'mode':  value == 'AUTO' ? 'MAN' : 'AUTO'})
-    }
-  })
+let toggleMode = async () => {
+   let value = MODE[await mode.get()]
+   let newValue =  value == MODE.AUTO ? MODE.MAN : MODE.AUTO
+   mode.set(getKeyByValue(MODE, newValue))  
 } 
-
 
 chrome.commands.onCommand.addListener((command) => {
   console.log('Command:', command);

@@ -14,7 +14,8 @@ function constructOptions(kButtonColors) {
         console.log('color is ' + item);
       })
     });
-    page.appendChild(button);
+ //   page.appendChild(button);
   }
 }
 constructOptions(kButtonColors);
+

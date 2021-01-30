@@ -1,9 +1,13 @@
 {
-  "name": "Getting Started Example tabGroups",
+  "name": "Tab Groupie",
   "version": "2.0",
-  "description": "Build an Extension!",
-  "permissions": ["activeTab", "declarativeContent", "storage", "tabs"],
+  "description": "Groups your tabs domain automatically",
+  "permissions": ["declarativeContent", "storage", "tabs"],
   "options_page": "options.html",
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
   "background": {
     "service_worker": "background.js"
   },
