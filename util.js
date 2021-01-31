@@ -24,7 +24,7 @@ let storedField = (storageApi, fieldName) =>
 })
 
 
-let getHost = (tab) => new URL(tab.url).hostname
+let getHost = (tab) => new URL(tab.url).hostname.match(/([^\.]+\.[^\.]+)$/)[0] || ""
 let groupByHost = (tabs) => tabs.reduce((hash, obj) => ({ ...hash, [getHost(obj)]: (hash[getHost(obj)] || []).concat(obj) }), {})
 
 let stringModuloColor = (s) => {
