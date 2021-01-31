@@ -2,17 +2,16 @@ importScripts("./util.js")
 
 let mode = storedField(chrome.storage.local, "mode")
 
-
-chrome.runtime.onInstalled.addListener(async () => {
+let initializeOptions = async () => {
   let value = await mode.get()
-  console.log("On installed mode", value)
+
   if (!!value) {
     chrome.action.setBadgeText({ text: value })   
   } else {
-    console.log("SET install mod", getKeyByValue(MODE, MODE.AUTO))
+
     mode.set(getKeyByValue(MODE, MODE.AUTO))
   }
-})
+}
 
 chrome.tabs.onCreated.addListener(createdTab => {
   console.log("New tab", createdTab)
@@ -57,22 +56,6 @@ let group = async () => {
   })
 }
 
-let findGroupIdForHostname = (tabs, hostname) => {
-  let existingGroups = [...new Set(tabs.map((t) => t.groupId).filter((groupId) => groupId != -1))]  
-  return existingGroups.find(groupId =>
-    tabs
-      .filter((t) => t.groupId == groupId)
-      .every((t) => getHost(t) == hostname))
-}
-
-chrome.action.onClicked.addListener(async() => {
-  if(MODE[await mode.get()] == MODE.AUTO) {
-    chrome.runtime.openOptionsPage()  
-  } else {
-    group()
-  }
-})
-
 chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (var key in changes) {
     var storageChange = changes[key];
@@ -89,8 +72,16 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
   }
 });
 
-chrome.commands.onCommand.addListener((command) => {
-  group()
-});
+chrome.action.onClicked.addListener(async() => {
+  if(MODE[await mode.get()] == MODE.AUTO) {
+    chrome.runtime.openOptionsPage()  
+  } else {
+    group()
+  }
+})
+
+chrome.commands.onCommand.addListener(group)
+chrome.runtime.onInstalled.addListener(initializeOptions)
+chrome.runtime.onStartup.addListener(initializeOptions)
 
 

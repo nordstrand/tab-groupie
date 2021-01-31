@@ -1,7 +1,4 @@
-
 const MODE = { "AUTO": 1, "MAN": 2 }
-
-
 Object.freeze(MODE)
 
 function getKeyByValue(object, value) {
@@ -26,6 +23,14 @@ let storedField = (storageApi, fieldName) =>
 
 let getHost = (tab) => new URL(tab.url).hostname.match(/([^\.]+\.[^\.]+)$/)[0] || ""
 let groupByHost = (tabs) => tabs.reduce((hash, obj) => ({ ...hash, [getHost(obj)]: (hash[getHost(obj)] || []).concat(obj) }), {})
+
+let findGroupIdForHostname = (tabs, hostname) => {
+  let existingGroups = [...new Set(tabs.map((t) => t.groupId).filter((groupId) => groupId != -1))]  
+  return existingGroups.find(groupId =>
+    tabs
+      .filter((t) => t.groupId == groupId)
+      .every((t) => getHost(t) == hostname))
+}
 
 let stringModuloColor = (s) => {
   let colors = ["grey", "blue", "red", "yellow", "green", "pink", "purple", "cyan"]
