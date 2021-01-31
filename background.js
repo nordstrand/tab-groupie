@@ -49,8 +49,8 @@ let group = async () => {
       chrome.tabs.group({ groupId: preExistingGroupId, tabIds: tabsForHostname.map((t) => t.id) }, (groupId) => {
         console.log(`(${tabsForHostname.length}) tab(s) added to ${!!preExistingGroupId ? "pre-existing" : "just created"} group ${groupId} for ${getHost(tabsForHostname[0])}`)
         if(! preExistingGroupId) {
-          let domainNameSansWww = getHost(tabsForHostname[0])
-          chrome.tabGroups.update(groupId, {title: domainNameSansWww, color: stringModuloColor(domainNameSansWww)} )
+          let domainName = getHost(tabsForHostname[0])
+          chrome.tabGroups.update(groupId, {title: domainName, color: stringModuloColor(domainName)} )
         }
       });
     }
