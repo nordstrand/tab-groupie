@@ -23,3 +23,7 @@ let storedField = (storageApi, fieldName) =>
   }
 })
 
+
+let getHost = (tab) => new URL(tab.url).hostname
+let groupByHost = (tabs) => tabs.reduce((hash, obj) => ({ ...hash, [getHost(obj)]: (hash[getHost(obj)] || []).concat(obj) }), {})
+

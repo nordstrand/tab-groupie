@@ -1,11 +1,4 @@
-
-
-let reflectCurrentMode = async () => {
-  let mode = MODE[await storedField(chrome.storage.local, "mode").get()]
-  console.log("Current mode", mode)
-  updateDom(mode)
-}
-
+let mode =  storedField(chrome.storage.local, "mode")
 
 let updateDom = (mode) =>  {
   document.querySelectorAll("input.mode").forEach(el => { 
@@ -15,7 +8,6 @@ let updateDom = (mode) =>  {
   })
 }
 
-
 chrome.runtime.onMessage.addListener( (message) => { 
   if(!!message.mode) {
     updateDom(MODE[message.mode])
@@ -23,17 +15,14 @@ chrome.runtime.onMessage.addListener( (message) => {
   console.log("Options page", message)
 });
 
-document.addEventListener("DOMContentLoaded", reflectCurrentMode)
+document.addEventListener("DOMContentLoaded", async () => {updateDom(MODE[await mode.get()])})
 
 document.getElementById("modes").addEventListener("click", (e) => {
-  console.log("CLICK", e)
   document.querySelectorAll("input.mode").forEach(el => {     
     console.log(`${el.id} == ${el.checked}`) 
     el.parentElement.classList.toggle("active", el.checked)
     if (el.checked) {
-      storedField(chrome.storage.local, "mode").set(getKeyByValue(MODE, MODE[el.id]))
+      mode.set(getKeyByValue(MODE, MODE[el.id]))
     }
   })
 })
-
-console.log("DONE")

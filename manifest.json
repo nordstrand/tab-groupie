@@ -1,9 +1,8 @@
 {
   "name": "Tab Groupie",
   "version": "2.0",
-  "description": "Groups your tabs domain automatically",
+  "description": "Groups your tabs by domain automatically",
   "permissions": ["declarativeContent", "storage", "tabs"],
-  "options_page": "options.html",
   "options_ui": {
     "page": "options.html",
     "open_in_tab": false
@@ -32,7 +31,7 @@
         "default": "Ctrl+Shift+L",
         "mac": "Command+Shift+L"
       },
-      "description": "Toggle mode"
+      "description": "Group tabs"
     }
   }
 }

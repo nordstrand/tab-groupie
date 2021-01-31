@@ -1,115 +1,92 @@
 importScripts("./util.js")
 
+let mode = storedField(chrome.storage.local, "mode")
 
-chrome.action.setBadgeText({ text: "AUTO" })
 
-chrome.runtime.onMessage.addListener(({ type, name }) => {
-  console.log("Message received: " + name)
-  chrome.storage.local.set({ name });
+chrome.runtime.onInstalled.addListener(async () => {
+  let value = await mode.get()
+  console.log("On installed mode", value)
+  if (!!value) {
+    chrome.action.setBadgeText({ text: value })   
+  } else {
+    console.log("SET install mod", getKeyByValue(MODE, MODE.AUTO))
+    mode.set(getKeyByValue(MODE, MODE.AUTO))
+  }
+})
 
-});
-
-chrome.tabs.onCreated.addListener((createdTab) => {
+chrome.tabs.onCreated.addListener(createdTab => {
   console.log("New tab", createdTab)
 
-  let listener = (tabId, _, tab) => {
+  let listener = async (tabId, _, tab) => {
     if (tabId == createdTab.id && tab.url.startsWith("http")) {
       chrome.tabs.onUpdated.removeListener(listener)
-      console.log("Update", tab, getHost(tab))
-      group()
+      let m = MODE[await mode.get()] 
+      console.log("Potential tab to group", tab.id, getHost(tab), m)     
+      if (m == MODE.AUTO) {
+        group()
+      }
     }
   }
 
   chrome.tabs.onUpdated.addListener(listener)
 })
 
-/*
-chrome.runtime.onInstalled.addListener(function() {
-  chrome.storage.sync.set({color: '#3aa757'}, function() {
-    console.log('The color is green!.');
-  });
-  chrome.declarativeContent.onPageChanged.removeRules(undefined, function() {
-    chrome.declarativeContent.onPageChanged.addRules([{
-      conditions: [new chrome.declarativeContent.PageStateMatcher({
-        pageUrl: {hostEquals: 'developer.chrome.com'},
-      })],
-      actions: [new chrome.declarativeContent.ShowPageAction()]
-    }]);
-  });
-
-});
-*/
-
-let getHost = (tab) => new URL(tab.url).hostname
-let groupByHost = (tabs) => tabs.reduce((hash, obj) => ({ ...hash, [getHost(obj)]: (hash[getHost(obj)] || []).concat(obj) }), {})
-let logger = console.log
-
-let group = async () => {  
+let group = async () => {
   let currentWindow = await chrome.windows.getCurrent()
-  let tabs = await chrome.tabs.query({ windowId: currentWindow.id, groupId: -1 })
-  logger("Creating groups..", tabs)
+  let tabs = await chrome.tabs.query({ windowId: currentWindow.id, groupId: -1, pinned: false})
+  console.log("Creating groups for tabs:", tabs)
 
-  let unGroupedTabsByHostname = groupByHost(tabs.filter((el) => el.groupId == -1))
+  let tabsToBeGrouped = tabs
+    .filter((el) => el.groupId == -1)
+    .filter((el) => el.url.startsWith("http"))
 
-  Object.keys(unGroupedTabsByHostname).forEach( (hostname) => {
+  let unGroupedTabsByHostname = groupByHost(tabsToBeGrouped)
+
+  Object.keys(unGroupedTabsByHostname).forEach((hostname) => {
     let tabsForHostname = unGroupedTabsByHostname[hostname]
     let preExistingGroupId = findGroupIdForHostname(tabs, hostname)
     if (tabsForHostname.length > 1 || !!preExistingGroupId) {  //Do not group if there only ONE tab with a certain hostname
       chrome.tabs.group({ groupId: preExistingGroupId, tabIds: tabsForHostname.map((t) => t.id) }, (groupId) => {
-        logger(`${!!preExistingGroupId ? "Added to" : "Created"} group ${groupId} for ${getHost(tabsForHostname[0])} (${tabsForHostname.length})`)
+        console.log(`(${tabsForHostname.length}) tab(s) added to ${!!preExistingGroupId ? "pre-existing" : "just created"} group ${groupId} for ${getHost(tabsForHostname[0])}`)
       });
     }
   })
 }
 
 let findGroupIdForHostname = (tabs, hostname) => {
-  let existingGroups = [...new Set(tabs.map((t) => t.groupId).filter((groupId) => groupId != -1))]
-  console.log("existing groups", existingGroups)
+  let existingGroups = [...new Set(tabs.map((t) => t.groupId).filter((groupId) => groupId != -1))]  
   return existingGroups.find(groupId =>
     tabs
       .filter((t) => t.groupId == groupId)
       .every((t) => getHost(t) == hostname))
 }
 
-chrome.action.onClicked.addListener(group)
-
-
-let mode = storedField(chrome.storage.local, "mode")
-
-chrome.storage.local.get(["mode"], (result)  => {
-  let value = result.mode
-  if (! value) {
-    chrome.storage.local.set({'mode': getKeyByValue(MODE.AUTO)})
-  }  
+chrome.action.onClicked.addListener(async() => {
+  if(MODE[await mode.get()] == MODE.AUTO) {
+    chrome.runtime.openOptionsPage()  
+  } else {
+    group()
+  }
 })
 
-chrome.storage.onChanged.addListener(function(changes, namespace) {
+chrome.storage.onChanged.addListener(function (changes, namespace) {
   for (var key in changes) {
     var storageChange = changes[key];
     console.log('Storage key "%s" in namespace "%s" changed. ' +
-                'Old value was "%s", new value is "%s".',
-                key,
-                namespace,
-                storageChange.oldValue,
-                storageChange.newValue);
-    if (key=='mode') {
-      chrome.runtime.sendMessage({mode: storageChange.newValue})  
+      'Old value was "%s", new value is "%s".',
+      key,
+      namespace,
+      storageChange.oldValue,
+      storageChange.newValue);
+    if (key == 'mode') {
+      chrome.runtime.sendMessage({ mode: storageChange.newValue })
       chrome.action.setBadgeText({ text: storageChange.newValue })
-      console.log("SENT")
     }
   }
 });
 
-
-let toggleMode = async () => {
-   let value = MODE[await mode.get()]
-   let newValue =  value == MODE.AUTO ? MODE.MAN : MODE.AUTO
-   mode.set(getKeyByValue(MODE, newValue))  
-} 
-
 chrome.commands.onCommand.addListener((command) => {
-  console.log('Command:', command);
-  toggleMode()
+  group()
 });
 
 
