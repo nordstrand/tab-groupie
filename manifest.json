@@ -2,7 +2,7 @@
   "name": "Tab Groupie",
   "version": "2.0",
   "description": "Groups your tabs by domain automatically",
-  "permissions": ["declarativeContent", "storage", "tabs"],
+  "permissions": ["declarativeContent", "storage", "tabs", "tabGroups"],
   "options_ui": {
     "page": "options.html",
     "open_in_tab": false
