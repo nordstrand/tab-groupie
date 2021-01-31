@@ -51,7 +51,7 @@ let group = async () => {
 
   let unGroupedTabsByHostname = groupByHost(tabs.filter((el) => el.groupId == -1))
 
-  Object.keys(unGroupedTabsByHostname).forEach(hostname => {
+  Object.keys(unGroupedTabsByHostname).forEach( (hostname) => {
     let tabsForHostname = unGroupedTabsByHostname[hostname]
     let preExistingGroupId = findGroupIdForHostname(tabs, hostname)
     if (tabsForHostname.length > 1 || !!preExistingGroupId) {  //Do not group if there only ONE tab with a certain hostname
@@ -78,7 +78,6 @@ let mode = storedField(chrome.storage.local, "mode")
 
 chrome.storage.local.get(["mode"], (result)  => {
   let value = result.mode
-  console.log("INIT mote", value)
   if (! value) {
     chrome.storage.local.set({'mode': getKeyByValue(MODE.AUTO)})
   }  
@@ -94,10 +93,13 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
                 storageChange.oldValue,
                 storageChange.newValue);
     if (key=='mode') {
+      chrome.runtime.sendMessage({mode: storageChange.newValue})  
       chrome.action.setBadgeText({ text: storageChange.newValue })
+      console.log("SENT")
     }
   }
 });
+
 
 let toggleMode = async () => {
    let value = MODE[await mode.get()]
@@ -109,3 +111,5 @@ chrome.commands.onCommand.addListener((command) => {
   console.log('Command:', command);
   toggleMode()
 });
+
+

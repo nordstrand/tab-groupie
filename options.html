@@ -3,29 +3,57 @@
 
 <head>
   <link rel="stylesheet" href="mvp.css">
+  <style>
+    #modes .active {
+      background-color: #e9e9e9;
+    }
+
+    #modes label {
+      font-weight: normal;
+    }
+
+    kbd {
+      display: inline-block;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 0.1em 0.5em;
+      margin: 0 0.2em;
+      box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 0 0 2px #fff inset;
+      background-color: #f7f7f7;
+    }
+  </style>
 </head>
 
 <body>
   <div style="margin: 10px; min-width: 400px;">
-    <h1>Tab Groupie </h1>
-    <p>
-      This extension organizes your tabs in groups by domain.
-    </p>
-      <label for="auto">  <input type="radio" id="auto" name="mode" value="AUTO"> Auto. Tabs are automatically grouped by domain.</label><br/>
-  
-      <label for="mode">  <input type="radio" name="mode" value="MAN">Manual. Tabs are groups by domain when the extension icon is clicked or shortcut CTRL-SHIFT-L is
-        pressed</label>
-    
+    <h3>Groups tabs</h3>
+    <div id="modes">
+      <label style="border: 1px solid; padding: 3px;"> <input type="radio" class="mode" id="AUTO" name="mode"
+          value="AUTO"><strong>Automatically.</strong> Recently opened tabs are automatically grouped by
+        domain.</label>
+      <br />
+      <label style="border: 1px solid; padding: 3px;"> <input type="radio" class="mode" id="MAN" name="mode"
+          value="MAN">
+        <strong>Manually.</strong> Tabs are grouped by domain when the icon in the tool bar is clicked or
+        <kbd>&#8984;</kbd> / <kbd>Ctrl</kbd> +<kbd>Shift</kbd>+<kbd>L</kbd>
+        is pressed.</label>
+    </div>
+
     <section>
-    <aside>
-      <h3>How does all this work?</h3>
-      <p>The plugin will check the domain for the site in each tab, grouping tabs by domain</p>
-    </aside>
-</section>    
+      <aside>
+        <h3>How does all this work?</h3>
+        <p>The exension will check the domain of the site in each tab, putting sites with the same domain in the same
+          tab groups.
+        </p>
+        <p>Only un-grouped tabs, not already present in a group, will be grouped.
+          Pinned tabs are never grouped.</p>
+      </aside>
+    </section>
 
   </div>
 
 </body>
+<script src="util.js"></script>
 <script src="options.js"></script>
 
 </html>
