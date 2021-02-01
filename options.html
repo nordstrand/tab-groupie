@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <link rel="stylesheet" href="mvp.css">
+  <link rel="stylesheet" href="lib/mvp.css">
   <style>
     #modes .active {
       background-color: #e9e9e9;
@@ -25,35 +25,8 @@
 </head>
 
 <body>
-  <div style="margin: 10px; min-width: 500px;">
-    <h3>Tabs are put in groups</h3>
-    <div id="modes">
-      <label style="border: 1px solid; padding: 3px;"> <input type="radio" class="mode" id="AUTO" name="mode"
-          value="AUTO"><strong>Automatically.</strong> Recently opened tabs are automatically grouped by
-        domain.</label>
-      <br />
-      <label style="border: 1px solid; padding: 3px;"> <input type="radio" class="mode" id="MAN" name="mode"
-          value="MAN">
-        <strong>Manually.</strong> Tabs are grouped by domain when the icon in the tool bar is clicked or
-        <span style="white-space:nowrap"><kbd>&#8984;</kbd> / <kbd>Ctrl</kbd> +<kbd>Shift</kbd>+<kbd>L</kbd></span>
-        is pressed.</label>
-    </div>
-
-    <section>
-      <aside>
-        <h3>How does all this work?</h3>
-        <p>The exension will check the domain of the site in each tab, putting sites with the same domain in the same
-          tab group.
-        </p>
-        <p>Only un-grouped tabs, not already in a group, will be grouped.
-          Pinned tabs are never grouped.</p>
-      </aside>
-    </section>
-
-  </div>
-
+  <div id="mnt" style="margin: 10px; min-width: 500px;"></div>
 </body>
 <script src="util.js"></script>
-<script src="options.js"></script>
-
+<script type="module" src="options.js"></script>
 </html>
