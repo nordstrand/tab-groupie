@@ -3,41 +3,62 @@ import htm from './lib/htm.js'
 
 const html = htm.bind(h);
 let mode =  storedField(chrome.storage.local, "mode")
+let color =  storedField(chrome.storage.local, "color")
+let title =  storedField(chrome.storage.local, "title")
 
 class OptionsPage extends Component {  
   async componentDidMount() {
-    this.setState({mode: MODE[await mode.get()]})
+    this.setState({
+      mode: MODE[await mode.get()],
+      color: await color.get(),
+      title: await title.get()
+    })
 
     let self = this
     chrome.runtime.onMessage.addListener( (message) => { 
       if(!!message.mode) {
-        self.setState({mode: MODE[message.mode]})
-      }      
+        message.mode = MODE[message.mode]
+      } 
+
+      self.setState(message)    
     });
   }
 
   setAuto = _ => mode.set(getKeyByValue(MODE, MODE.AUTO))
   setMan  = _ => mode.set(getKeyByValue(MODE, MODE.MAN))
+  toggleTitle = _ => title.set(! this.state.title)
+  toggleColor = _ => color.set(! this.state.color)
   
   render() {
     let platformSuperKey = navigator.platform === "MacIntel" ? String.fromCodePoint(8984) : "Ctrl"
 
     return html`
     <div>
-      <h3>Tabs are put in groups</h3>    
-
-      <div id="modes">
-        <label style="border: 1px solid; padding: 3px;" class=${this.state.mode == MODE.AUTO && "active"}>
+      <div>
+        <h3>Tabs are put in groups</h3>
+        <label class=${this.state.mode == MODE.AUTO && "active"}>
           <input type="radio" class="mode" name="mode" value="AUTO" onClick=${this.setAuto} checked=${this.state.mode == MODE.AUTO} />
           <strong>Automatically.</strong> Recently opened tabs are automatically grouped by
           domain.
         </label>
         <br />
-        <label style="border: 1px solid; padding: 3px;"  class=${this.state.mode == MODE.MAN && "active"}>
+        <label class=${this.state.mode == MODE.MAN && "active"}>
           <input type="radio" class="mode" name="mode" value="MAN" onClick=${this.setMan} checked=${this.state.mode == MODE.MAN}/>
           <strong>Manually.</strong> Tabs are grouped by domain when the icon in the tool bar is clicked or
           <span style="white-space:nowrap"><kbd>${platformSuperKey}</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd></span>
           is pressed.
+        </label>
+      </div>
+      <br/><br/>
+      <div>
+        <h3>New groups get</h3>
+        <label class=${this.state.title && "active"}>
+          <input type="checkbox" class="mode"  onClick=${this.toggleTitle} checked=${this.state.title}/>
+          <strong>A title.</strong> Set to the domain of sites in that group.
+        </label>
+        <label class=${this.state.color && "active"}>
+          <input type="checkbox" class="mode"  onClick=${this.toggleColor} checked=${this.state.color}/>
+          <strong>An unique color.</strong> Based on the domain.
         </label>
       </div>
       <section>

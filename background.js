@@ -1,6 +1,8 @@
 importScripts("./util.js")
 
 let mode = storedField(chrome.storage.local, "mode")
+let color =  storedField(chrome.storage.local, "color")
+let title =  storedField(chrome.storage.local, "title")
 
 let initializeOptions = async () => {
   let value = await mode.get()
@@ -10,6 +12,8 @@ let initializeOptions = async () => {
   } else {
 
     mode.set(getKeyByValue(MODE, MODE.AUTO))
+    color.set(true)
+    title.set(true)
   }
 }
 
@@ -45,11 +49,15 @@ let group = async () => {
     let tabsForHostname = unGroupedTabsByHostname[hostname]
     let preExistingGroupId = findGroupIdForHostname(tabs, hostname)
     if (tabsForHostname.length > 1 || !!preExistingGroupId) {  //Do not group if there only ONE tab with a certain hostname
-      chrome.tabs.group({ groupId: preExistingGroupId, tabIds: tabsForHostname.map((t) => t.id) }, (groupId) => {
+      chrome.tabs.group({ groupId: preExistingGroupId, tabIds: tabsForHostname.map((t) => t.id) }, async (groupId) => {
         console.log(`(${tabsForHostname.length}) tab(s) added to ${!!preExistingGroupId ? "pre-existing" : "just created"} group ${groupId} for ${getHost(tabsForHostname[0])}`)
         if(! preExistingGroupId) {
           let domainName = getHost(tabsForHostname[0])
-          chrome.tabGroups.update(groupId, {title: domainName, color: stringModuloColor(domainName)} )
+          let groupOptions = {
+            color: (await color.get()) ? stringModuloColor(domainName) : "grey",
+            ...(await title.get()) && {title: domainName}
+          }          
+          chrome.tabGroups.update(groupId, groupOptions)
         }
       });
     }
@@ -65,12 +73,15 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
       namespace,
       storageChange.oldValue,
       storageChange.newValue);
-    if (key == 'mode') {
-      chrome.runtime.sendMessage({ mode: storageChange.newValue })
+
+    if (key == 'mode') {     
       chrome.action.setBadgeText({ text: storageChange.newValue })
     }
+
+    chrome.runtime.sendMessage({ [key]: storageChange.newValue })
   }
 });
+
 
 chrome.action.onClicked.addListener(async() => {
   if(MODE[await mode.get()] == MODE.AUTO) {

@@ -33,7 +33,7 @@ let findGroupIdForHostname = (tabs, hostname) => {
 }
 
 let stringModuloColor = (s) => {
-  let colors = ["grey", "blue", "red", "yellow", "green", "pink", "purple", "cyan"]
+  let colors = ["blue", "red", "yellow", "green", "pink", "purple", "cyan"]
   var hash = hashStr(s);
   var index = hash % colors.length;
   return colors[index];
