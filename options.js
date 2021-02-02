@@ -41,7 +41,6 @@ class OptionsPage extends Component {
           <strong>Automatically.</strong> Recently opened tabs are automatically grouped by
           domain.
         </label>
-        <br />
         <label class=${this.state.mode == MODE.MAN && "active"}>
           <input type="radio" class="mode" name="mode" value="MAN" onClick=${this.setMan} checked=${this.state.mode == MODE.MAN}/>
           <strong>Manually.</strong> Tabs are grouped by domain when the icon in the tool bar is clicked or
