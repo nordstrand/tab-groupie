@@ -4,11 +4,28 @@
 <head>
   <link rel="stylesheet" href="lib/mvp.css">
   <style>
-    label.active {
+    button {
+      padding: 0rem
+    }
+    .customgroup-row input {
+      display: inline-block
+    }
+    .customgroup-row label {
+      display: inline-block
+    }
+    .options label.active {
       background-color: #e9e9e9;
     }
 
-    label {
+    input:invalid {
+      border: 2px dashed red;
+    }
+
+    input:valid {
+      border: 2px solid black;
+    }
+
+    .options label {
       font-weight: normal;
       border: 1px solid; 
       padding: 3px;

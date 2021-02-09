@@ -20,16 +20,31 @@ let storedField = (storageApi, fieldName) =>
   }
 })
 
+let hostToCustomGroup = (hostname, customGroups) => {
+  let g = customGroups.find(customGroup => customGroup.domains.includes(hostname)) //TODO: parse and test individual regexp:s
+  return !!g ? g.name : null
+}
 
-let getHost = (tab) => new URL(tab.url).hostname.match(/([^\.]+\.[^\.]+)$/)[0] || ""
-let groupByHost = (tabs) => tabs.reduce((hash, obj) => ({ ...hash, [getHost(obj)]: (hash[getHost(obj)] || []).concat(obj) }), {})
+let getHost = (tab, customGroups) => {
+  console.log(tab.url)
+  let host = new URL(tab.url).hostname.match(/([^\.]+\.[^\.]+)$/)[0] 
+  
+  if (!host) {
+    return null
+  } 
 
-let findGroupIdForHostname = (tabs, hostname) => {
+  let group = hostToCustomGroup(host, customGroups)
+  return !!group ? group : host
+}
+
+let groupByHost = (tabs, customGroups) => tabs.reduce((hash, obj) => ({ ...hash, [getHost(obj, customGroups)]: (hash[getHost(obj, customGroups)] || []).concat(obj) }), {})
+
+let findGroupIdForHostname = (tabs, hostname, customGroups) => {
   let existingGroups = [...new Set(tabs.map((t) => t.groupId).filter((groupId) => groupId != -1))]  
   return existingGroups.find(groupId =>
     tabs
       .filter((t) => t.groupId == groupId)
-      .every((t) => getHost(t) == hostname))
+      .every((t) => getHost(t, customGroups) == hostname))
 }
 
 let stringModuloColor = (s) => {
