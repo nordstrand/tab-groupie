@@ -21,7 +21,9 @@ const OptionsPage = (props) =>  {
         message.mode = MODE[message.mode]
       } 
 
-      setState({...state, ...message})
+      setState(prevState => {        
+        return {...prevState, ...message};
+      });
     });
   }, [])
 
