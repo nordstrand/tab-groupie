@@ -4,9 +4,40 @@
 <head>
   <link rel="stylesheet" href="lib/mvp.css">
   <style>
-    button {
-      padding: 0rem
+    div.customgroup-row {
+      display: flex;
     }
+
+    .customgroup-row label {
+      flex: 1;
+    }
+
+    .customgroup-row button.remove {
+      padding: 0rem;
+      margin-top: 0px;
+      margin-right: 6px;
+      margin-bottom: 5px;
+      height: 30px;
+      width: 30px;
+      background-color: red;
+      border: 2px solid red;  
+    }
+
+    .customgroup-row button.remove:after {
+      content:'\2716'; 
+    }
+
+    button.add {
+      height: 30px;
+      padding: 0rem;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+
+    button.add:after {
+      content: 'Add';
+    }
+    
     .customgroup-row input {
       display: inline-block
     }
@@ -25,11 +56,20 @@
       border: 2px solid black;
     }
 
-    .options label {
+    .options h3 {
+      margin-bottom: 2px;
+    }
+
+    .options-selection label {
       font-weight: normal;
       border: 1px solid; 
       padding: 3px;
     }
+
+    .options input {
+      margin-bottom: 0px;
+    }
+    
 
     kbd {
       display: inline-block;
@@ -43,7 +83,7 @@
   </style>
 </head>
 
-<body>
+<body style="padding:0">
   <div id="mnt" style="margin: 10px; min-width: 500px;"></div>
 </body>
 <script src="util.js"></script>

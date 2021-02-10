@@ -61,7 +61,7 @@ const OptionsPage = (props) =>  {
 
   return html`
   <div>
-    <div class="options">
+    <div class="options options-selection">
       <h3>Tabs are put in groups</h3>
       <label class=${mode == MODE.AUTO && "active"}>
         <input type="radio" class="mode" name="mode" value="AUTO" onClick=${setAuto} checked=${mode == MODE.AUTO} />
@@ -75,8 +75,8 @@ const OptionsPage = (props) =>  {
         is pressed.
       </label>
     </div>
-    <br/><br/>
-    <div class="options">
+
+    <div class="options options-selection">
       <h3>New groups get</h3>
       <label class=${title && "active"}>
         <input type="checkbox" class="mode"  onClick=${toggleTitle} checked=${title}/>
@@ -87,28 +87,27 @@ const OptionsPage = (props) =>  {
         <strong>An unique color.</strong> Based on the domain.
       </label>
     </div>
-    <div>
+    <div class="options">
       <h3>Custom groups</h3>
       ${customGroups.map( (group, index) => 
         html`
       <div class="customgroup-row">
-        <button onClick=${onGroupRemove(index)}>x</button>
+        <div style="display: flex; flex-direction: column; justify-content: flex-end;"><button class="remove" onClick=${onGroupRemove(index)}/></div>
         <label>Name<br/>
-          <input value=${group.name} onInput=${onGroupNameInput(index)} required type="text" placeholder="Car" />
+          <input style="width: 100px;" value=${group.name} onInput=${onGroupNameInput(index)} required type="text" placeholder="Car" />
         </label>
         <label>Domains<br/>
-          <input value=${group.domains} onInput=${onGroupDomainInput(index)} required pattern="([A-Za-z0-9]+\.[A-Za-z0-9]{2,3})(,[A-Za-z0-9]+\.[A-Za-z0-9]{2,3})*" type="text" placeholder="gm.com,vw.com,bmw.com"/>
+          <input style="width: 250px;" value=${group.domains} onInput=${onGroupDomainInput(index)} required pattern="([A-Za-z0-9]+\.[A-Za-z0-9]{2,3})(,[A-Za-z0-9]+\.[A-Za-z0-9]{2,3})*" type="text" placeholder="gm.com,vw.com,bmw.com"/>
         </label>
       </div>`
       )}
-
-      <button onClick=${onAddGroup}>Add</button>
+      <button class="add" onClick=${onAddGroup} />
     </div>
     <section>
-      <aside>
+      <aside style="width: 85%;">
         <h3>How does all this work?</h3>
         <p>The exension will check the domain of the site in each tab, putting sites with the same domain in the same
-          tab group.
+          tab group. With <i>custom groups</i> you can get different domains in the same group. 
         </p>
         <p>Only un-grouped tabs, not already in a group, will be grouped.
           Pinned tabs are never grouped.</p>

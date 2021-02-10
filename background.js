@@ -26,7 +26,7 @@ chrome.tabs.onCreated.addListener(createdTab => {
       chrome.tabs.onUpdated.removeListener(listener)
       let m = MODE[await mode.get()] 
       let groups =  await customGroups.get()
-      console.log("Potential tab to group", tab.id, getHost(tab, groups), m)     
+      console.log(`Potential group "${getHost(tab, groups)}" for tab ${tab.id} (${tab.url}). Mode: ${getKeyByValue(MODE, m)}`)     
       if (m == MODE.AUTO) {
         group()
       }
@@ -60,6 +60,7 @@ let group = async () => {
             color: (await color.get()) ? stringModuloColor(domainName) : "grey",
             ...(await title.get()) && {title: domainName}
           }          
+          console.log(`For group ${groupId} updating with options ${JSON.stringify(groupOptions)}`)
           chrome.tabGroups.update(groupId, groupOptions)
         }
       });

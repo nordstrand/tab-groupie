@@ -21,12 +21,13 @@ let storedField = (storageApi, fieldName) =>
 })
 
 let hostToCustomGroup = (hostname, customGroups) => {
-  let g = customGroups.find(customGroup => customGroup.domains.includes(hostname)) //TODO: parse and test individual regexp:s
+  let g = customGroups.find(customGroup => 
+    customGroup.domains.split(",").filter(x => x !== "").some(domain => 
+      !! hostname.match(`${domain}$`)))
   return !!g ? g.name : null
 }
 
 let getHost = (tab, customGroups) => {
-  console.log(tab.url)
   let host = new URL(tab.url).hostname.match(/([^\.]+\.[^\.]+)$/)[0] 
   
   if (!host) {
