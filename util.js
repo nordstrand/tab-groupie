@@ -47,12 +47,12 @@ let findGroupIdForHostname = (tabs, hostname, customGroups) => {
       .filter((t) => t.groupId == groupId)
       .every((t) => getHost(t, customGroups) == hostname))
 }
+let groupColors = ["blue", "red", "yellow", "green", "pink", "purple", "cyan"]
 
 let stringModuloColor = (s) => {
-  let colors = ["blue", "red", "yellow", "green", "pink", "purple", "cyan"]
   var hash = hashStr(s);
-  var index = hash % colors.length;
-  return colors[index];
+  var index = hash % groupColors.length;
+  return groupColors[index];
 
   function hashStr(str) {
     var hash = 0;

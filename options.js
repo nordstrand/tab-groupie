@@ -36,19 +36,24 @@ const OptionsPage = (props) =>  {
 
   let onGroupNameInput = groupNumber => e => {
     const { value } = e.target;
-    customGroups = [...customGroups]
     storage.customGroups.set( customGroups.map((g, index) => 
-      index === groupNumber ? {name: value, domains: g.domains} : g))
+      index === groupNumber ? {name: value, color: g.color, domains: g.domains} : g))
+  }
+
+  let onGroupColorInput = groupNumber => e => {
+    const { value } = e.target;
+   
+    storage.customGroups.set( customGroups.map((g, index) => 
+      index === groupNumber ? {name: g.name, color: value, domains: g.domains} : g))
   }
 
   let onGroupDomainInput = groupNumber =>  e => {
     const { value } = e.target;
-    customGroups = [...customGroups]
     storage.customGroups.set( customGroups.map((g, index) => 
-      index === groupNumber ? {name: g.name, domains: value} : g))
+      index === groupNumber ? {name: g.name, color: g.color, domains: value} : g))
   }
   let onAddGroup = _ => {
-     storage.customGroups.set([...customGroups,  {name: "", domains: ""}] )
+     storage.customGroups.set([...customGroups,  {name: "", color: "blue", domains: ""}] )
   }
 
   let onGroupRemove = groupNumber => _ => {
@@ -82,11 +87,11 @@ const OptionsPage = (props) =>  {
       <h3>New groups get</h3>
       <label class=${title && "active"}>
         <input type="checkbox" class="mode"  onClick=${toggleTitle} checked=${title}/>
-        <strong>A title.</strong> Set to the domain of sites in that group.
+        <strong>A title.</strong> Set to the domain of the sites in that group or name of the custom group.
       </label>
       <label class=${color && "active"}>
         <input type="checkbox" class="mode"  onClick=${toggleColor} checked=${color}/>
-        <strong>An unique color.</strong> Based on the domain.
+        <strong>An unique color.</strong> Either based on the domain or as set for a custom group.
       </label>
     </div>
     <div class="options">
@@ -96,10 +101,16 @@ const OptionsPage = (props) =>  {
       <div class="customgroup-row">
         <div style="display: flex; flex-direction: column; justify-content: flex-end;"><button class="remove" onClick=${onGroupRemove(index)}/></div>
         <label>Name<br/>
-          <input style="width: 100px;" value=${group.name} onInput=${onGroupNameInput(index)} required type="text" placeholder="Car" />
+          <input class="tabcolor-${group.color}"style="width: 80px; color: white;" value=${group.name} onInput=${onGroupNameInput(index)} required type="text" placeholder="Car" />
+        </label>
+        <label>Color<br/>
+          <select value=${group.color} onChange=${onGroupColorInput(index)}>
+            ${groupColors.map( color => 
+              html`<option value=${color}>${color}</option>` )}
+          </select>
         </label>
         <label>Domains<br/>
-          <input style="width: 250px;" value=${group.domains} onInput=${onGroupDomainInput(index)} required pattern="([A-Za-z0-9]+\.[A-Za-z0-9]{2,3})(,[A-Za-z0-9]+\.[A-Za-z0-9]{2,3})*" type="text" placeholder="gm.com,vw.com,bmw.com"/>
+          <input style="width: 200px;" value=${group.domains} onInput=${onGroupDomainInput(index)} required pattern="([A-Za-z0-9]+\.[A-Za-z0-9]{2,3})(,[A-Za-z0-9]+\.[A-Za-z0-9]{2,3})*" type="text" placeholder="gm.com,vw.com,bmw.com"/>
         </label>
       </div>`
       )}

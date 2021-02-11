@@ -56,8 +56,11 @@ let group = async () => {
         console.log(`(${tabsForHostname.length}) tab(s) added to ${!!preExistingGroupId ? "pre-existing" : "just created"} group ${groupId} for ${getHost(tabsForHostname[0], groups)}`)
         if(! preExistingGroupId) {
           let domainName = getHost(tabsForHostname[0], groups)
+          let groupUsed = groups.find(g => g.name === domainName)
+          let colorToSet = (groupUsed && groupUsed.color) || stringModuloColor(domainName) 
+
           let groupOptions = {
-            color: (await color.get()) ? stringModuloColor(domainName) : "grey",
+            color: (await color.get()) ? colorToSet : "grey",
             ...(await title.get()) && {title: domainName}
           }          
           console.log(`For group ${groupId} updating with options ${JSON.stringify(groupOptions)}`)
