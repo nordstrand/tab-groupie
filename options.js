@@ -110,7 +110,7 @@ const OptionsPage = (props) =>  {
           </select>
         </label>
         <label>Domains<br/>
-          <input style="width: 200px;" value=${group.domains} onInput=${onGroupDomainInput(index)} required pattern="([A-Za-z0-9]+\.[A-Za-z0-9]{2,3})(,[A-Za-z0-9]+\.[A-Za-z0-9]{2,3})*" type="text" placeholder="gm.com,vw.com,bmw.com"/>
+          <input style="width: 200px;" value=${group.domains} onInput=${onGroupDomainInput(index)} required pattern="([A-Za-z0-9\.-]+.[A-Za-z0-9]{2,3})(,[A-Za-z0-9\.-]+.[A-Za-z0-9]{2,3})*" type="text" placeholder="gm.com,vw.com,bmw.com"/>
         </label>
       </div>`
       )}
