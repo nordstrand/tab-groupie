@@ -28,11 +28,11 @@ let hostToCustomGroup = (hostname, customGroups) => {
 }
 
 let getHost = (tab, customGroups) => {
-  let host = new URL(tab.url).hostname.match(/([^\.]+\.[^\.]+)$/)[0] 
-  
+  let host = new URL(tab.url).hostname
+
   if (!host) {
     return null
-  } 
+  }
 
   let group = hostToCustomGroup(host, customGroups)
   return !!group ? group : host
