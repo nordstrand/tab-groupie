@@ -45,23 +45,23 @@ let group = async () => {
     .filter((el) => el.groupId == -1)
     .filter((el) => el.url.startsWith("http"))
 
-  let groups =  await customGroups.get()
-  let unGroupedTabsByHostname = groupByHost(tabsToBeGrouped, groups)
+  let groups = await customGroups.get()
+  let unGroupedTabsByHostname = groupByHost(tabsToBeGrouped)
 
-  Object.keys(unGroupedTabsByHostname).forEach((hostname) => {
+  Object.keys(unGroupedTabsByHostname).forEach(async (hostname) => {
     let tabsForHostname = unGroupedTabsByHostname[hostname]
-    let preExistingGroupId = findGroupIdForHostname(tabs.filter((el) => el.url.startsWith("http")), hostname, groups)
+    let preExistingGroupId = await findPrexistingGroupIdForHostname(tabs.filter((el) => el.url.startsWith("http")), hostname, groups)
     if (tabsForHostname.length > 1 || !!preExistingGroupId) {  //Do not group if there only ONE tab with a certain hostname
       chrome.tabs.group({ groupId: preExistingGroupId, tabIds: tabsForHostname.map((t) => t.id) }, async (groupId) => {
-        console.log(`(${tabsForHostname.length}) tab(s) added to ${!!preExistingGroupId ? "pre-existing" : "just created"} group ${groupId} for ${getHost(tabsForHostname[0], groups)}`)
+        console.log(`(${tabsForHostname.length}) tab(s) added to ${!!preExistingGroupId ? "pre-existing" : "just created"} group ${groupId} for ${getHost(tabsForHostname[0])}`)
         if(! preExistingGroupId) {
-          let domainName = getHost(tabsForHostname[0], groups)
-          let groupUsed = groups.find(g => g.name === domainName)
-          let colorToSet = (groupUsed && groupUsed.color) || stringModuloColor(domainName) 
+          let groupName = hostToCustomGroup(getHost(tabsForHostname[0]), groups) || getHost(tabsForHostname[0])
+          let groupUsed = groups.find(g => g.name === groupName)
+          let colorToSet = (groupUsed && groupUsed.color) || stringModuloColor(groupName) 
 
           let groupOptions = {
             color: (await color.get()) ? colorToSet : "grey",
-            ...(await title.get()) && {title: domainName}
+            ...(await title.get()) && {title: groupName}
           }          
           console.log(`For group ${groupId} updating with options ${JSON.stringify(groupOptions)}`)
           chrome.tabGroups.update(groupId, groupOptions)
