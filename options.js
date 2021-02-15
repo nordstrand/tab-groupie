@@ -101,7 +101,7 @@ const OptionsPage = (props) =>  {
       <div class="customgroup-row">
         <div style="display: flex; flex-direction: column; justify-content: flex-end;"><button class="remove" onClick=${onGroupRemove(index)}/></div>
         <label>Name<br/>
-          <input class="tabcolor-${group.color}"style="width: 80px; color: white;" value=${group.name} onInput=${onGroupNameInput(index)} required type="text" placeholder="Car" />
+          <input class="tabcolor-${group.color}" style="width: 80px; color: white;" value=${group.name} onInput=${onGroupNameInput(index)} required type="text" placeholder="Car" />
         </label>
         <label>Color<br/>
           <select value=${group.color} onChange=${onGroupColorInput(index)}>

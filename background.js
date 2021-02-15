@@ -14,7 +14,7 @@ let initializeOptions = async () => {
     mode.set(getKeyByValue(MODE, MODE.AUTO))
     color.set(true)
     title.set(true)
-    customGroups.set([{name: "", domains: ""}])
+    customGroups.set([])
   }
 }
 
