@@ -4,7 +4,7 @@
   "description": "Groups your tabs by domain automatically",
   "permissions": ["declarativeContent", "storage", "tabs", "tabGroups"],
   "options_ui": {
-    "page": "options.html",
+    "page": "options/index.html",
     "open_in_tab": false
   },
   "background": {
