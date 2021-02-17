@@ -2,6 +2,8 @@ import { h, Component, render } from './lib/preact.js';
 import htm from './lib/htm.js'
 import { useState, useEffect } from './lib/preact-hooks.js'
 
+import CustomGroupRow from './CustomGroupRow.js'
+
 const html = htm.bind(h);
 
 let storage = {
@@ -11,60 +13,61 @@ let storage = {
   customGroups: storedField(chrome.storage.local, "customGroups")
 }
 
-const OptionsPage = (props) =>  {    
-  
-  const [state, setState] = useState(props.initialValues)
-  
-  useEffect(() => {
-    chrome.runtime.onMessage.addListener( (message) => { 
-      if(!!message.mode) {
-        message.mode = MODE[message.mode]
-      } 
+const OptionsPage = (props) => {
 
-      setState(prevState => {        
-        return {...prevState, ...message};
+  const [state, setState] = useState(props.initialValues)
+
+  useEffect(() => {
+    chrome.runtime.onMessage.addListener((message) => {
+      if (!!message.mode) {
+        message.mode = MODE[message.mode]
+      }
+
+      setState(prevState => {
+        return { ...prevState, ...message };
       });
     });
   }, [])
 
-  let {mode, color, title, customGroups} = state
+  let { mode, color, title, customGroups } = state
 
   let setAuto = _ => storage.mode.set(getKeyByValue(MODE, MODE.AUTO))
-  let setMan  = _ => storage.mode.set(getKeyByValue(MODE, MODE.MAN))
-  let toggleTitle = _ => storage.title.set(! title)
-  let toggleColor = _ => storage.color.set(! color)
+  let setMan = _ => storage.mode.set(getKeyByValue(MODE, MODE.MAN))
+  let toggleTitle = _ => storage.title.set(!title)
+  let toggleColor = _ => storage.color.set(!color)
+  let onAddGroup = _ => storage.customGroups.set([...customGroups, { name: "", color: "blue", domains: "" }])
 
-  let onGroupNameInput = groupNumber => e => {
-    const { value } = e.target;
-    storage.customGroups.set( customGroups.map((g, index) => 
-      index === groupNumber ? {name: value, color: g.color, domains: g.domains} : g))
-  }
+  let custumGroupCallbacks = groupNumber => ({
+    onGroupRemove: _ => {
+      storage.customGroups.set(customGroups
+        .map((g, index) => index === groupNumber ? null : g)
+        .filter(g => !!g))
+    },
 
-  let onGroupColorInput = groupNumber => e => {
-    const { value } = e.target;
-   
-    storage.customGroups.set( customGroups.map((g, index) => 
-      index === groupNumber ? {name: g.name, color: value, domains: g.domains} : g))
-  }
+    onGroupNameInput: e => {
+      const { value } = e.target;
+      storage.customGroups.set(customGroups.map((g, index) =>
+        index === groupNumber ? { name: value, color: g.color, domains: g.domains } : g))
+    },
+    onGroupColorInput: e => {
+      const { value } = e.target;
 
-  let onGroupDomainInput = groupNumber =>  e => {
-    const { value } = e.target;
-    storage.customGroups.set( customGroups.map((g, index) => 
-      index === groupNumber ? {name: g.name, color: g.color, domains: value} : g))
-  }
-  let onAddGroup = _ => {
-     storage.customGroups.set([...customGroups,  {name: "", color: "blue", domains: ""}] )
-  }
+      storage.customGroups.set(customGroups.map((g, index) =>
+        index === groupNumber ? { name: g.name, color: value, domains: g.domains } : g))
+    },
+    onGroupNameInput: e => {
+      const { value } = e.target;
+      storage.customGroups.set(customGroups.map((g, index) =>
+        index === groupNumber ? { name: value, color: g.color, domains: g.domains } : g))
+    },
+    onGroupDomainInput: e => {
+      const { value } = e.target;
+      storage.customGroups.set(customGroups.map((g, index) =>
+        index === groupNumber ? { name: g.name, color: g.color, domains: value } : g))
+    }
+  })
 
-  let onGroupRemove = groupNumber => _ => {
-    storage.customGroups.set(customGroups
-    .map((g, index) => index === groupNumber? null : g)
-    .filter( g => !!g )  ) 
-  }
-
-  
   let platformSuperKey = navigator.platform === "MacIntel" ? String.fromCodePoint(8984) : "Ctrl"
-
 
   return html`
   <div>
@@ -96,24 +99,9 @@ const OptionsPage = (props) =>  {
     </div>
     <div class="options">
       <h3>Custom groups</h3>
-      ${customGroups.map( (group, index) => 
-        html`
-      <div class="customgroup-row">
-        <div style="display: flex; flex-direction: column; justify-content: flex-end;"><button class="remove" onClick=${onGroupRemove(index)}/></div>
-        <label>Name<br/>
-          <input class="tabcolor-${group.color}" style="width: 80px; color: white;" value=${group.name} onInput=${onGroupNameInput(index)} required type="text" placeholder="Car" />
-        </label>
-        <label>Color<br/>
-          <select value=${group.color} onChange=${onGroupColorInput(index)}>
-            ${groupColors.map( color => 
-              html`<option value=${color}>${color}</option>` )}
-          </select>
-        </label>
-        <label>Domains<br/>
-          <input style="width: 200px;" value=${group.domains} onInput=${onGroupDomainInput(index)} required pattern="([A-Za-z0-9\.-]+.[A-Za-z0-9]{2,3})(,[A-Za-z0-9\.-]+.[A-Za-z0-9]{2,3})*" type="text" placeholder="gm.com,vw.com,bmw.com"/>
-        </label>
-      </div>`
-      )}
+      ${customGroups.map((group, index) =>
+    html`<${CustomGroupRow} group=${group} callbacks=${custumGroupCallbacks(index)} />`
+  )}
       <button class="add" onClick=${onAddGroup} />
     </div>
     <section>
@@ -129,8 +117,10 @@ const OptionsPage = (props) =>  {
   </div>`;
 }
 
+
+
 (async () => {
-  let initialValues = {  
+  let initialValues = {
     mode: MODE[await storage.mode.get()],
     color: await storage.color.get(),
     title: await storage.title.get(),
@@ -138,4 +128,4 @@ const OptionsPage = (props) =>  {
   }
 
   render(html`<${OptionsPage} initialValues=${initialValues} />`, document.getElementById("mnt"));
-}) ()
+})()
