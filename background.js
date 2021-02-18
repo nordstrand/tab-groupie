@@ -71,7 +71,7 @@ let group = async () => {
   })
 }
 
-chrome.storage.onChanged.addListener(function (changes, namespace) {
+chrome.storage.onChanged.addListener((changes, namespace) => {
   for (var key in changes) {
     var storageChange = changes[key];
     console.log('Storage key "%s" in namespace "%s" changed. ' +
@@ -83,6 +83,23 @@ chrome.storage.onChanged.addListener(function (changes, namespace) {
 
     if (key == 'mode') {     
       chrome.action.setBadgeText({ text: storageChange.newValue })
+    }
+
+    if(key == 'customGroups') {
+
+      let oldColorsByGroup = storageChange.oldValue.reduce((agg, el) => ({ ...agg, [el.name]:  el.color }), {})
+      let newColorsByGroup = storageChange.newValue.reduce((agg, el) => ({ ...agg, [el.name]:  el.color }), {})
+
+      for (var group in newColorsByGroup) {
+        if(!(newColorsByGroup[group] === oldColorsByGroup[group]))  {
+          console.log(`Group ${group} change color from ${oldColorsByGroup[group]} to ${newColorsByGroup[group]}`)
+
+          chrome.tabGroups.query({title: group}, (foundGroups) => {
+            chrome.tabGroups.update(foundGroups[0].id, {color :newColorsByGroup[group] })
+          })
+          break;
+        }
+      }
     }
 
     chrome.runtime.sendMessage({ [key]: storageChange.newValue })
