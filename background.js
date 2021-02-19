@@ -78,8 +78,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       'Old value was "%s", new value is "%s".',
       key,
       namespace,
-      storageChange.oldValue,
-      storageChange.newValue);
+      JSON.stringify(storageChange.oldValue),
+      JSON.stringify(storageChange.newValue));
 
     if (key == 'mode') {     
       chrome.action.setBadgeText({ text: storageChange.newValue })
@@ -87,6 +87,27 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 
     if(key == 'customGroups') {
 
+
+      var nameChanged = false;
+      if( storageChange.oldValue.length === storageChange.newValue.length ) {
+        storageChange.oldValue.some( (oldGroup, index) => {
+          if (! (oldGroup.name  === storageChange.newValue[index].name )) {
+            console.log(`Group ${oldGroup.name} is now ${storageChange.newValue[index].name}`)
+            nameChanged = true
+            chrome.tabGroups.query({title: oldGroup.name}, (foundGroups) => {
+              foundGroups[0] && chrome.tabGroups.update(foundGroups[0].id, {title: storageChange.newValue[index].name})
+            })
+            return true
+          } else {
+            return false
+          }
+        })        
+      }
+
+      if (nameChanged) {
+        return
+      }
+      
       let oldColorsByGroup = storageChange.oldValue.reduce((agg, el) => ({ ...agg, [el.name]:  el.color }), {})
       let newColorsByGroup = storageChange.newValue.reduce((agg, el) => ({ ...agg, [el.name]:  el.color }), {})
 
@@ -95,7 +116,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
           console.log(`Group ${group} change color from ${oldColorsByGroup[group]} to ${newColorsByGroup[group]}`)
 
           chrome.tabGroups.query({title: group}, (foundGroups) => {
-            chrome.tabGroups.update(foundGroups[0].id, {color :newColorsByGroup[group] })
+            foundGroups[0] && chrome.tabGroups.update(foundGroups[0].id, {color :newColorsByGroup[group] })
           })
           break;
         }

@@ -13,6 +13,32 @@ let storage = {
   customGroups: storedField(chrome.storage.local, "customGroups")
 }
 
+let customGroupCallbacks = groupNumber => {
+  let applyToCustomGroups = async (fn) => storage.customGroups.set(fn(await storage.customGroups.get()))
+  return {
+    onGroupRemove: _ =>
+      applyToCustomGroups((groups) =>
+        groups.map((g, index) => index === groupNumber ? null : g).filter(g => !!g)
+      ),
+
+    onGroupNameInput: e =>
+      applyToCustomGroups((groups) =>
+        groups.map((g, index) => index === groupNumber ? { ...g, name: e.target.value } : g)
+      ),
+
+    onGroupColorInput: e =>
+      applyToCustomGroups((groups) =>
+        groups.map((g, index) => index === groupNumber ? { ...g, color: e.target.value } : g)
+      ),
+
+
+    onGroupDomainInput: e =>
+      applyToCustomGroups((groups) =>
+        groups.map((g, index) => index === groupNumber ? { ...g, domains: e.target.value } : g)
+      )
+  }
+}
+
 const OptionsPage = (props) => {
 
   const [state, setState] = useState(props.initialValues)
@@ -37,35 +63,6 @@ const OptionsPage = (props) => {
   let toggleColor = _ => storage.color.set(!color)
   let onAddGroup = _ => storage.customGroups.set([...customGroups, { name: "", color: "blue", domains: "" }])
 
-  let custumGroupCallbacks = groupNumber => ({
-    onGroupRemove: _ => {
-      storage.customGroups.set(customGroups
-        .map((g, index) => index === groupNumber ? null : g)
-        .filter(g => !!g))
-    },
-
-    onGroupNameInput: e => {
-      const { value } = e.target;
-      storage.customGroups.set(customGroups.map((g, index) =>
-        index === groupNumber ? { name: value, color: g.color, domains: g.domains } : g))
-    },
-    onGroupColorInput: e => {
-      const { value } = e.target;
-
-      storage.customGroups.set(customGroups.map((g, index) =>
-        index === groupNumber ? { name: g.name, color: value, domains: g.domains } : g))
-    },
-    onGroupNameInput: e => {
-      const { value } = e.target;
-      storage.customGroups.set(customGroups.map((g, index) =>
-        index === groupNumber ? { name: value, color: g.color, domains: g.domains } : g))
-    },
-    onGroupDomainInput: e => {
-      const { value } = e.target;
-      storage.customGroups.set(customGroups.map((g, index) =>
-        index === groupNumber ? { name: g.name, color: g.color, domains: value } : g))
-    }
-  })
 
   let platformSuperKey = navigator.platform === "MacIntel" ? String.fromCodePoint(8984) : "Ctrl"
 
@@ -100,7 +97,7 @@ const OptionsPage = (props) => {
     <div class="options">
       <h3>Custom groups</h3>
       ${customGroups.map((group, index) =>
-    html`<${CustomGroupRow} group=${group} callbacks=${custumGroupCallbacks(index)} />`
+    html`<${CustomGroupRow} group=${group} callbacks=${customGroupCallbacks(index)} />`
   )}
       <button class="add" onClick=${onAddGroup} />
     </div>
