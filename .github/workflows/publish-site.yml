@@ -34,7 +34,9 @@ jobs:
 
       - name: replace site sources with generated site
         run: |
+          find temp/ -mindepth 1  -maxdepth 1 ! -name .git -exec rm -rvf {} \;
           mv domain-groupie/public/* temp/
+          echo ____
           find temp/ -maxdepth 1
 
       - name: push gh-pages branch
