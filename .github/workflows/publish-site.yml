@@ -25,14 +25,14 @@ jobs:
           npm install
           npm run-script build
 
-      - name: checkout gh-pages branch
+      - name: clone and checkout gh-pages branch
         uses: actions/checkout@v2
         with:
           ref: gh-pages
           persist-credentials: true
           path: temp          
 
-      - name: replace site sources with generated site
+      - name: move site sources to gh-pages clone
         run: |
           find temp/ -mindepth 1  -maxdepth 1 ! -name .git -exec rm -rvf {} \;
           mv domain-groupie/public/* temp/

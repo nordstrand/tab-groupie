@@ -7,7 +7,7 @@ const shouldAnalyseBundle = process.env.ANALYSE_BUNDLE
 let extensionName = `TabGroupie`
 
 module.exports = {
-  pathPrefix: "/tab-groupie",
+  pathPrefix: "/tabgroupie",
 
   siteMetadata: {
     siteTitle: `${extensionName}`,
