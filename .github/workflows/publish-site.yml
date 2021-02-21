@@ -15,13 +15,9 @@ jobs:
           ref: master
           persist-credentials: false
 
-      - name: remove non-site source files
-        run: |
-          find . -mindepth 1  -maxdepth 1 ! -name .git ! -name domain-groupie -exec rm -rf {} \;
-
       - name: build site from sources
         run: |
-          cd domain-groupie
+          cd site
           npm install
           npm run-script build
 
@@ -35,7 +31,7 @@ jobs:
       - name: move site sources to gh-pages clone
         run: |
           find temp/ -mindepth 1  -maxdepth 1 ! -name .git -exec rm -rvf {} \;
-          mv domain-groupie/public/* temp/
+          mv site/public/* temp/
           echo ____
           find temp/ -maxdepth 1
 
