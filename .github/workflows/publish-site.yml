@@ -9,26 +9,32 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout master  branch 
+      - name: checkout master branch
         uses: actions/checkout@v2
         with:
           ref: master
-          path: temp
           persist-credentials: false
 
-#      - name: remove all files # remove files.
-#        run: |
-#          rm -rvf *
-
-      - name: run install and build
+      - name: remove non-site related files
         run: |
-          cd temp/domain-groupie
+          find . -maxdepth 1 ! -name .git ! -name domain-groupie -delete
+
+      - name: build site
+        run: |
+          cd domain-groupie
           npm install
           npm run-script build
 
-      - name: move files # move the public built files into root dir and remove others.
-        if: ${{ success() }}
+      - name: site to root
         run: |
-          mv -v temp/domain-groupie/public/* ./
-          rm -rvf temp          
+          mv domain-groupie/public/* .
+          find . -maxdepth 1
+          rm -rf domain-groupie/
+
+
+#      - name: move files # move the public built files into root dir and remove others.
+#        if: ${{ success() }}
+#        run: |
+#          mv -v temp/domain-groupie/public/* ./
+#          rm -rf temp          
 
