@@ -1,0 +1,82 @@
+---
+title: "How to publish a Gatsby site on Github Pages using Github Actions"
+date: 2020-02-21
+slug: "/gatsby-with-github-actions"
+canonicalUrl: "https://random-blog-about-curses.com"
+---
+
+[Gatsby](https://www.gatsbyjs.com/) appear to be the static site generator with the most traction, by far. I was delighted with how fast
+and easy it was to generate a decent looking site for Tab Groupie.
+
+However I also needed to build and host the site. As the site is about some software beeing developed on Github
+is was quite natural to build using GitHub Actions and host on [GitHub Pages](https://pages.github.com/).
+
+I made a couple of design choices:
+### Monorepo
+The sources for the Gatsby site are version controlled in the very same GitHub repo as the software. This will
+make it possible to write documentation and code in lockstep. It appears as Gatsby by default assumes that it'll live
+by its own in the root of a repo, but it was quite content to live in a [/site](https://github.com/nordstrand/tab-groupie/tree/master/site)
+subfolder after twisting some knobs.
+
+### No third-party actions
+I'd really like to use no third-party actions in my GitHub Actions workflow. Third-party actions would in my case 
+need to have write access to the repo, introducing a significant vector of [Supply chain attacks](https://en.wikipedia.org/wiki/Supply_chain_attack).
+The threat model goes something like this: the author of a GitHub Action gets hacked and the attacker introduce
+malicious code in the action that e.g. steals the access token of the users of said action. 
+
+Pinning usage of the action to a certain known good tag [will not really help](https://julienrenaux.fr/2019/12/20/github-actions-security-risk/)
+as tags could be trivially overwritten by the attacker in this case. You could pin on
+a git SHA-1, but in light of recent years [SHA-1 collision attacks](https://shattered.io/) this also feels somewhat dubious.
+
+### Minimize version control of derived data
+Gatsby builds a static site from basically markdown source files. The build product needs to checked into the git repo
+in order for GitHub Pages to serve it. I really don't like to bloat my repos by keeping derived data under version 
+control. However, by keeping the build product on a seperate branch the tip of which gets amended and forced pushed 
+on every build, I'll only ever have <i>one</i> - the most recent - version of the site checked in.
+
+### My GitHub actions Workflow
+```yaml
+name: publish-site
+
+on:
+  push:
+    branches:
+      master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout master branch
+        uses: actions/checkout@v2
+        with:
+          ref: master
+          persist-credentials: false
+
+      - name: build site from sources
+        run: |
+          cd site
+          npm install
+          npm run-script build
+
+      - name: clone and checkout gh-pages branch
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+          persist-credentials: true
+          path: temp          
+
+      - name: move site sources to gh-pages clone
+        run: |
+          find temp/ -mindepth 1  -maxdepth 1 ! -name .git -exec rm -rvf {} \;
+          mv site/public/* temp/
+
+      - name: push gh-pages branch
+        run: |
+          cd temp/
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit --amend -m "Generated $(date) from $GITHUB_SHA"
+          git push --force origin gh-pages
+```
