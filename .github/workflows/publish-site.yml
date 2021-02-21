@@ -31,6 +31,7 @@ jobs:
       - name: move site sources to gh-pages clone
         run: |
           find temp/ -mindepth 1  -maxdepth 1 ! -name .git -exec rm -rvf {} \;
+          mv site/public/* temp/
 
       - name: push gh-pages branch
         run: |
