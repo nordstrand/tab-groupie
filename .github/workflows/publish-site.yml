@@ -9,9 +9,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: enriikke/gatsby-gh-pages-action@bf3ba06696b02a028d2121b04961926c1b862a3c
+      - name: checkout master  branch 
+        uses: actions/checkout@v2
         with:
-          access-token: ${{ secrets.ACCESS_TOKEN }}
-          deploy-branch: gh-pages
-          working-dir: domain-groupie/
+          ref: master
+          path: temp
+          persist-credentials: false
+
+      - name: remove all files # remove files.
+        run: |
+          rm -rvf *
+
+      - name: run install and build
+        run: |
+          cd temp/domain-groupie
+          npm install
+          npm run-script build
+
+      - name: move files # move the public built files into root dir and remove others.
+        if: ${{ success() }}
+        run: |
+          mv -v temp/domain-groupie/public/* ./
+          rm -rf temp          
+
