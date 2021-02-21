@@ -7,6 +7,8 @@ const shouldAnalyseBundle = process.env.ANALYSE_BUNDLE
 let extensionName = `TabGroupie`
 
 module.exports = {
+  pathPrefix: "/tab-groupie",
+
   siteMetadata: {
     siteTitle: `${extensionName}`,
     siteTitleAlt: `${extensionName} - a Chrome extension that automates tab groups`,

@@ -17,7 +17,7 @@ jobs:
 
       - name: remove non-site related files
         run: |
-          find . -maxdepth 1 ! -name .git ! -name domain-groupie -exec rm -rf {} \;
+          find . -mindepth 1  -maxdepth 1 ! -name .git ! -name domain-groupie -exec rm -rf {} \;
 
       - name: build site
         run: |
@@ -28,8 +28,17 @@ jobs:
       - name: site to root
         run: |
           mv domain-groupie/public/* .
-          find . -maxdepth 1
           rm -rf domain-groupie/
+          find . -maxdepth 1
+
+      - name: push gh-pages bran
+        uses: actions/checkout@v2
+        - run: |            
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            git add .
+            git commit -m "generated"
+            git push origin gh-pages
 
 
 #      - name: move files # move the public built files into root dir and remove others.
