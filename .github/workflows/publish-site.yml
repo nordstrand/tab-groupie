@@ -17,7 +17,7 @@ jobs:
 
       - name: remove non-site related files
         run: |
-          find . -maxdepth 1 ! -name .git ! -name domain-groupie -exec rm -rf {} ;
+          find . -maxdepth 1 ! -name .git ! -name domain-groupie -exec rm -rf {} \;
 
       - name: build site
         run: |
