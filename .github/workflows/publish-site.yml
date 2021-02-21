@@ -45,8 +45,8 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
-          git commit --amend -m "Generated: $(date)"
-          git push origin gh-pages
+          git commit --amend -m "Generated $(date) from $GITHUB_SHA"
+          git push --force origin gh-pages
 
 
 #      - name: move files # move the public built files into root dir and remove others.
