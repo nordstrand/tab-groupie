@@ -25,15 +25,21 @@ jobs:
           npm install
           npm run-script build
 
+      - name: checkout gh-pages branch
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+          persist-credentials: true
+          path: temp          
+
       - name: replace site sources with generated site
         run: |
-          mv domain-groupie/public/* .
-          rm -rf domain-groupie/
-          find . -maxdepth 1
+          mv domain-groupie/public/* temp/
+          find temp/ -maxdepth 1
 
       - name: push gh-pages branch
-#        uses: actions/checkout@v2
-        run: |            
+        run: |
+          cd temp/
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
