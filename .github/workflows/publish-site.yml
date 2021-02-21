@@ -15,30 +15,30 @@ jobs:
           ref: master
           persist-credentials: false
 
-      - name: remove non-site related files
+      - name: remove non-site source files
         run: |
           find . -mindepth 1  -maxdepth 1 ! -name .git ! -name domain-groupie -exec rm -rf {} \;
 
-      - name: build site
+      - name: build site from sources
         run: |
           cd domain-groupie
           npm install
           npm run-script build
 
-      - name: site to root
+      - name: replace site sources with generated site
         run: |
           mv domain-groupie/public/* .
           rm -rf domain-groupie/
           find . -maxdepth 1
 
-      - name: push gh-pages bran
+      - name: push gh-pages branch
         uses: actions/checkout@v2
-        - run: |            
-            git config user.name github-actions
-            git config user.email github-actions@github.com
-            git add .
-            git commit -m "generated"
-            git push origin gh-pages
+        run: |            
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "generated"
+          git push origin gh-pages
 
 
 #      - name: move files # move the public built files into root dir and remove others.
