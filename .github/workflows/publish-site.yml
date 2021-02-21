@@ -31,9 +31,6 @@ jobs:
       - name: move site sources to gh-pages clone
         run: |
           find temp/ -mindepth 1  -maxdepth 1 ! -name .git -exec rm -rvf {} \;
-          mv site/public/* temp/
-          echo ____
-          find temp/ -maxdepth 1
 
       - name: push gh-pages branch
         run: |
@@ -43,11 +40,3 @@ jobs:
           git add .
           git commit --amend -m "Generated $(date) from $GITHUB_SHA"
           git push --force origin gh-pages
-
-
-#      - name: move files # move the public built files into root dir and remove others.
-#        if: ${{ success() }}
-#        run: |
-#          mv -v temp/domain-groupie/public/* ./
-#          rm -rf temp          
-
