@@ -16,9 +16,9 @@ jobs:
           path: temp
           persist-credentials: false
 
-      - name: remove all files # remove files.
-        run: |
-          rm -rvf *
+#      - name: remove all files # remove files.
+#        run: |
+#          rm -rvf *
 
       - name: run install and build
         run: |
@@ -30,5 +30,5 @@ jobs:
         if: ${{ success() }}
         run: |
           mv -v temp/domain-groupie/public/* ./
-          rm -rf temp          
+          rm -rvf temp          
 
