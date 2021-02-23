@@ -12,7 +12,7 @@
                 console.log('\x1b[32m%s\x1b[0m', '\u2714 ' + desc);
             } catch (error) {
                 console.log('\n');
-                console.log('\x1b[31m%s\x1b[0m', '\u2718 ' + desc);
+                console.log('\x1b[31m%s\x1b[0m', '\u2718 ' + desc + " --- ERROR");
                 console.error(error);
             }
         }
@@ -26,13 +26,14 @@
     </script>
     <script src="../util.js"></script>
     <script src="tests.js"></script>
+
 </head>
 
 <body>
     <h1>Tests</h1>
     <div id="selector"></div>
 
-    
+<script>console.log("--- DONE")</script>    
 </body>
 
 </html>

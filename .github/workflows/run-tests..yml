@@ -1,0 +1,26 @@
+name: run-tests
+
+on:
+  push:
+    branches:
+      master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout master branch
+        uses: actions/checkout@v2
+        with:
+          ref: master
+          persist-credentials: false
+
+      - name: install test deps
+        run: |
+          cd extension/test
+          npm install
+
+      - name: run tests
+        run: |
+          cd extension/test
+          npm test

@@ -1,0 +1,16 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "ci.js",
+  "dependencies": {
+    "file-url": "^3.0.0",
+    "puppeteer": "^7.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node ci.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
