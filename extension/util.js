@@ -5,7 +5,6 @@ function getKeyByValue(object, value) {
   return Object.keys(object).find(key => object[key] === value);
 }
 
-
 let storedField = (storageApi, fieldName) =>
 ({
   get: () =>
@@ -47,16 +46,16 @@ let stringModuloColor = (s) => {
   }
 }
 
-let getGroupTitle = (groupId) => new Promise((resolve, reject) => {
+let getGroupIds = (tabs) => [...new Set(tabs.map((t) => t.groupId).filter((groupId) => groupId != -1))]
+
+let getGroupDetails = (groupId) => new Promise((resolve, reject) => {
   chrome.tabGroups.get(groupId, (groupDetails) => {
     resolve({id: groupId, title: groupDetails.title})
   })
 })
 
-let findPrexistingGroupIdForHostname =  async (tabs, hostname, customGroups) => {
-  let existingGroupIDs = [...new Set(tabs.map((t) => t.groupId).filter((groupId) => groupId != -1))]
 
-  let existingGroups = await Promise.all(existingGroupIDs.map(getGroupTitle))
+let findPrexistingImplicitGroup =  (tabs, existingGroups, hostname) => {
 
   let matchingGroup = existingGroups.find( (group) => {
     function shouldBeGroupedTogetherAccordingToCurrentTabUrls() {
@@ -65,12 +64,66 @@ let findPrexistingGroupIdForHostname =  async (tabs, hostname, customGroups) => 
       .every((t) => getHost(t, customGroups) == hostname);
     }
     
-    let groupName =  group.title
-    let matchesCustomGroup = !!groupName &&  groupName === hostToCustomGroup(hostname, customGroups)
-    
-    return matchesCustomGroup || shouldBeGroupedTogetherAccordingToCurrentTabUrls()
+    return  shouldBeGroupedTogetherAccordingToCurrentTabUrls()
   })      
 
   return !!matchingGroup ? matchingGroup.id : null
 }
 
+
+/** 
+ *   currentTabs, currentGroups, customGroupRules -> [actions]
+ * 
+ */
+let getGroupingActions = (currentTabs, currentGroups, customGroupRules) => {
+
+  let unGroupedTabs = currentTabs
+    .filter((el) => el.groupId == -1)
+    .filter((el) => el.url.startsWith("http"))
+
+    let unGroupedTabsByHostname = groupByHost(unGroupedTabs)
+    var actions = []
+
+    Object.keys(unGroupedTabsByHostname).forEach((hostname) => {
+      let tabsForHostname = unGroupedTabsByHostname[hostname]
+
+      let preexistingImplictGroup = findPrexistingImplicitGroup(currentTabs, currentGroups, hostname)
+
+      let customGroup = (() => {
+        let gName = hostToCustomGroup(hostname, customGroupRules)
+        return customGroupRules.find(g => g.name === gName)
+      })()
+
+      let prexistingCustomGroup = currentGroups.find(g => g.title === (customGroup && customGroup.name))
+      let tabIds = tabsForHostname.map( t => t.id )
+
+      if (!! prexistingCustomGroup) {
+        // Reuse existing custom group
+        actions = [...actions, {groupId: prexistingCustomGroup.id, tabIds }]
+      } else if (!! customGroup) {
+         // Create new gustom group         
+        actions = [...actions, {color: customGroup.color, title: customGroup.name, isCustom: true, tabIds}]
+      } else  if (!! preexistingImplictGroup) {
+        // Reuse existing implicitly create tab group
+        actions = [...actions, {groupId: preexistingImplictGroup, tabIds}]
+      } else if (tabsForHostname.length > 1) {
+        // Create new implicit group
+        actions = [...actions, {title: hostname, tabIds: tabIds}]
+      }
+    })
+
+    let consolidatedCustomGroupCreating = {}
+    actions.forEach( a => {
+      if(a.isCustom) {
+        consolidatedCustomGroupCreating[a.title] = {
+          color: a.color,
+          title: a.title,
+          tabIds: [...( consolidatedCustomGroupCreating[a.title] ? consolidatedCustomGroupCreating[a.title].tabIds : []), ...a.tabIds]
+        }
+      }
+    })
+    
+
+    return [...actions.filter(a => ! a.isCustom), ...Object.values(consolidatedCustomGroupCreating)]
+    
+}

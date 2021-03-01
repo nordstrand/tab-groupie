@@ -24,3 +24,93 @@ it('hostToCustomGroup should match domain suffix',  () => {
 it('hostToCustomGroup should not match domain prefix',  () => {
     assert(null === hostToCustomGroup("vw.com.evil.com", customGroups))
 });
+
+it('getGroupingActions should return no action for one ungrouped tab',  () => {
+
+    let currentTabs = [{id: 1,  groupId: -1, url: "https://vw.com"}]
+    let currentGroups = []
+    let customGroupRules = []
+
+    let actions = getGroupingActions(currentTabs, currentGroups, customGroupRules)
+    
+    assert(actions.length === 0)
+});
+
+it('getGroupingActions should return no action for two unmatching tabs',  () => {
+
+    let currentTabs = [{id: 1,  groupId: -1, url: "https://vw.com"},
+                       {id: 2,  groupId: -1, url: "https://vvw.com"}]
+    let currentGroups = []
+    let customGroupRules = []
+
+    let actions = getGroupingActions(currentTabs, currentGroups, customGroupRules)
+    
+    assert(actions.length === 0)
+});
+
+it('getGroupingActions should return action for two ungrouped tab with same host',  () => {
+
+    let currentTabs = [{id: 1,  groupId: -1, url: "https://vw.com/a"},
+                       {id: 2,  groupId: -1, url: "https://vw.com/b"}]
+    
+    let currentGroups = []
+    let customGroupRules = []
+
+    let actions = getGroupingActions(currentTabs, currentGroups, customGroupRules)
+    
+    assert(JSON.stringify(actions) === `[{"title":"vw.com","tabIds":[1,2]}]`)
+});
+
+
+it('getGroupingActions should reuse existing implicit group',  () => {
+
+    let currentTabs = [{id: 1,  groupId: 100, url: "https://vw.com/a"},
+                       {id: 2,  groupId: -1,  url: "https://vw.com/b"}]
+    
+    let currentGroups = [{id: 100, color: "blue", title: "vw.com" }]
+    let customGroupRules = []
+
+    let actions = getGroupingActions(currentTabs, currentGroups, customGroupRules)
+        
+    assert(JSON.stringify(actions) === `[{"groupId":100,"tabIds":[2]}]`)
+});
+
+it('getGroupingActions should use customGroupRules in preference to implicit current groups',  () => {
+
+    let currentTabs = [{id: 1,  groupId: 100, url: "https://vw.com/a"},
+                       {id: 2,  groupId: -1,  url: "https://vw.com/b"}]
+    
+    let currentGroups = [{id: 100, color: "blue", title: "vw.com" }]
+    let customGroupRules = [{domains: "vw.com", color:"red", name: "car" }]
+
+    let actions = getGroupingActions(currentTabs, currentGroups, customGroupRules)
+        
+    assert(JSON.stringify(actions) === `[{"color":"red","title":"car","tabIds":[2]}]`)
+});
+
+it('getGroupingActions should reuse existing customGroup',  () => {
+
+    let currentTabs = [{id: 1,  groupId: 100, url: "https://vw.com/a"},
+                       {id: 2,  groupId: -1,  url: "https://vw.com/b"}]
+    
+    let currentGroups = [{id: 100, color: "red", title: "car" }]
+    let customGroupRules = [{domains: "vw.com", color:"red", name: "car" }]
+
+    let actions = getGroupingActions(currentTabs, currentGroups, customGroupRules)
+        
+    assert(JSON.stringify(actions) === `[{"groupId":100,"tabIds":[2]}]`)
+});
+
+
+it('getGroupingActions should create one and only one customGroup for matching hosts also when hosts are different',  () => {
+
+    let currentTabs = [{id: 1,  groupId: -1, url: "https://gm.com/"},
+                       {id: 2,  groupId: -1, url: "https://vw.com/"}]
+    
+    let currentGroups = []
+    let customGroupRules = [{domains: "vw.com,gm.com", color:"red", name: "car" }]
+
+    let actions = getGroupingActions(currentTabs, currentGroups, customGroupRules)
+        
+    assert(JSON.stringify(actions) === `[{"color":"red","title":"car","tabIds":[1,2]}]`)
+});

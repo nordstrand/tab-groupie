@@ -1,15 +1,15 @@
 importScripts("./util.js")
 
 let mode = storedField(chrome.storage.local, "mode")
-let color =  storedField(chrome.storage.local, "color")
-let title =  storedField(chrome.storage.local, "title")
-let customGroups =  storedField(chrome.storage.local, "customGroups")
+let color = storedField(chrome.storage.local, "color")
+let title = storedField(chrome.storage.local, "title")
+let customGroups = storedField(chrome.storage.local, "customGroups")
 
 let initializeOptions = async () => {
   let value = await mode.get()
 
   if (!!value) {
-    chrome.action.setBadgeText({ text: value })   
+    chrome.action.setBadgeText({ text: value })
   } else {
     mode.set(getKeyByValue(MODE, MODE.AUTO))
     color.set(true)
@@ -24,9 +24,9 @@ chrome.tabs.onCreated.addListener(createdTab => {
   let listener = async (tabId, _, tab) => {
     if (tabId == createdTab.id && tab.url.startsWith("http")) {
       chrome.tabs.onUpdated.removeListener(listener)
-      let m = MODE[await mode.get()] 
-      let groups =  await customGroups.get()
-      console.log(`Potential group "${getHost(tab, groups)}" for tab ${tab.id} (${tab.url}). Mode: ${getKeyByValue(MODE, m)}`)     
+      let m = MODE[await mode.get()]
+      let groups = await customGroups.get()
+      console.log(`Potential group "${getHost(tab, groups)}" for tab ${tab.id} (${tab.url}). Mode: ${getKeyByValue(MODE, m)}`)
       if (m == MODE.AUTO) {
         group()
       }
@@ -36,37 +36,34 @@ chrome.tabs.onCreated.addListener(createdTab => {
   chrome.tabs.onUpdated.addListener(listener)
 })
 
+
 let group = async () => {
   let currentWindow = await chrome.windows.getCurrent()
-  let tabs = await chrome.tabs.query({ windowId: currentWindow.id, groupId: -1, pinned: false})
-  console.log("Creating groups for tabs:", tabs)
 
-  let tabsToBeGrouped = tabs
-    .filter((el) => el.groupId == -1)
-    .filter((el) => el.url.startsWith("http"))
+  let tabs = await chrome.tabs.query({ windowId: currentWindow.id, pinned: false })  
+  let currentTabGroups = await Promise.all(getGroupIds(tabs).map(getGroupDetails))
+  let customTabGroupRules = await customGroups.get()  
 
-  let groups = await customGroups.get()
-  let unGroupedTabsByHostname = groupByHost(tabsToBeGrouped)
+  console.log("Looking up grouping actions to perform for tabs:", tabs.map(t => ({ id: t.id, groupId: t.groupId, url: t.url }) ))
+  let groupingActions = getGroupingActions(tabs, currentTabGroups, customTabGroupRules)
+  console.log("Actions", groupingActions)
+  
+  groupingActions.forEach(executeAction)
+}
 
-  Object.keys(unGroupedTabsByHostname).forEach(async (hostname) => {
-    let tabsForHostname = unGroupedTabsByHostname[hostname]
-    let preExistingGroupId = await findPrexistingGroupIdForHostname(tabs.filter((el) => el.url.startsWith("http")), hostname, groups)
-    if (tabsForHostname.length > 1 || !!preExistingGroupId) {  //Do not group if there only ONE tab with a certain hostname
-      chrome.tabs.group({ groupId: preExistingGroupId, tabIds: tabsForHostname.map((t) => t.id) }, async (groupId) => {
-        console.log(`(${tabsForHostname.length}) tab(s) added to ${!!preExistingGroupId ? "pre-existing" : "just created"} group ${groupId} for ${getHost(tabsForHostname[0])}`)
-        if(! preExistingGroupId) {
-          let groupName = hostToCustomGroup(getHost(tabsForHostname[0]), groups) || getHost(tabsForHostname[0])
-          let groupUsed = groups.find(g => g.name === groupName)
-          let colorToSet = (groupUsed && groupUsed.color) || stringModuloColor(groupName) 
+let executeAction = (action) => {
+  chrome.tabs.group({ groupId: action.groupId, tabIds: action.tabIds }, async (groupId) => {
+    console.log(`Tab(s) ${action.tabIds} added to ${!!action.groupId ? "pre-existing" : "just created"} tab group ${groupId}`)
 
-          let groupOptions = {
-            color: (await color.get()) ? colorToSet : "grey",
-            ...(await title.get()) && {title: groupName}
-          }          
-          console.log(`For group ${groupId} updating with options ${JSON.stringify(groupOptions)}`)
-          chrome.tabGroups.update(groupId, groupOptions)
-        }
-      });
+    if (!action.groupId) {
+      let colorToSet = action.color || stringModuloColor(action.title)
+
+      let groupOptions = {
+        color: (await color.get()) ? colorToSet : "grey",
+        ...(await title.get()) && { title: action.title }
+      }
+      console.log(`Tab group ${groupId} updating with options ${JSON.stringify(groupOptions)}`)
+      chrome.tabGroups.update(groupId, groupOptions)
     }
   })
 }
@@ -81,42 +78,42 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       JSON.stringify(storageChange.oldValue),
       JSON.stringify(storageChange.newValue));
 
-    if (key == 'mode') {     
+    if (key == 'mode') {
       chrome.action.setBadgeText({ text: storageChange.newValue })
     }
 
-    if(key == 'customGroups') {
+    if (key == 'customGroups') {
 
 
       var nameChanged = false;
-      if( storageChange.oldValue.length === storageChange.newValue.length ) {
-        storageChange.oldValue.some( (oldGroup, index) => {
-          if (! (oldGroup.name  === storageChange.newValue[index].name )) {
+      if (storageChange.oldValue.length === storageChange.newValue.length) {
+        storageChange.oldValue.some((oldGroup, index) => {
+          if (!(oldGroup.name === storageChange.newValue[index].name)) {
             console.log(`Group ${oldGroup.name} is now ${storageChange.newValue[index].name}`)
             nameChanged = true
-            chrome.tabGroups.query({title: oldGroup.name}, (foundGroups) => {
-              foundGroups[0] && chrome.tabGroups.update(foundGroups[0].id, {title: storageChange.newValue[index].name})
+            chrome.tabGroups.query({ title: oldGroup.name }, (foundGroups) => {
+              foundGroups[0] && chrome.tabGroups.update(foundGroups[0].id, { title: storageChange.newValue[index].name })
             })
             return true
           } else {
             return false
           }
-        })        
+        })
       }
 
       if (nameChanged) {
         return
       }
-      
-      let oldColorsByGroup = storageChange.oldValue.reduce((agg, el) => ({ ...agg, [el.name]:  el.color }), {})
-      let newColorsByGroup = storageChange.newValue.reduce((agg, el) => ({ ...agg, [el.name]:  el.color }), {})
+
+      let oldColorsByGroup = storageChange.oldValue.reduce((agg, el) => ({ ...agg, [el.name]: el.color }), {})
+      let newColorsByGroup = storageChange.newValue.reduce((agg, el) => ({ ...agg, [el.name]: el.color }), {})
 
       for (var group in newColorsByGroup) {
-        if(!(newColorsByGroup[group] === oldColorsByGroup[group]))  {
+        if (!(newColorsByGroup[group] === oldColorsByGroup[group])) {
           console.log(`Group ${group} change color from ${oldColorsByGroup[group]} to ${newColorsByGroup[group]}`)
 
-          chrome.tabGroups.query({title: group}, (foundGroups) => {
-            foundGroups[0] && chrome.tabGroups.update(foundGroups[0].id, {color :newColorsByGroup[group] })
+          chrome.tabGroups.query({ title: group }, (foundGroups) => {
+            foundGroups[0] && chrome.tabGroups.update(foundGroups[0].id, { color: newColorsByGroup[group] })
           })
           break;
         }
@@ -128,9 +125,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 });
 
 
-chrome.action.onClicked.addListener(async() => {
-  if(MODE[await mode.get()] == MODE.AUTO) {
-    chrome.runtime.openOptionsPage()  
+chrome.action.onClicked.addListener(async () => {
+  if (MODE[await mode.get()] == MODE.AUTO) {
+    chrome.runtime.openOptionsPage()
   } else {
     group()
   }
