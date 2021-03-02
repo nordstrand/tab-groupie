@@ -1,3 +1,6 @@
+// The ID of the group that the tabs are in, or $(ref:tabGroups.TAB_GROUP_ID_NONE) for ungrouped tabs."
+const TAB_GROUP_ID_NONE = -1
+
 const MODE = { "AUTO": 1, "MAN": 2 }
 Object.freeze(MODE)
 
@@ -21,7 +24,7 @@ let storedField = (storageApi, fieldName) =>
 
 let hostToCustomGroup = (hostname, customGroups) => {
   let g = customGroups.find(customGroup =>
-    customGroup.domains.split(",").filter(x => x !== "").some(domain =>
+    customGroup.domains.split(",").map(s => s.trim()).filter(x => x !== "").some(domain =>
       !!hostname.match(`${domain}$`)))
   return !!g ? g.name : null
 }
@@ -46,7 +49,7 @@ let stringModuloColor = (s) => {
   }
 }
 
-let getGroupIds = (tabs) => [...new Set(tabs.map((t) => t.groupId).filter((groupId) => groupId != -1))]
+let getGroupIds = (tabs) => [...new Set(tabs.map((t) => t.groupId).filter((groupId) => groupId != TAB_GROUP_ID_NONE))]
 
 let getGroupDetails = (groupId) => new Promise((resolve, reject) => {
   chrome.tabGroups.get(groupId, (groupDetails) => {
@@ -78,7 +81,7 @@ let findPrexistingImplicitGroup =  (tabs, existingGroups, hostname) => {
 let getGroupingActions = (currentTabs, currentGroups, customGroupRules) => {
 
   let unGroupedTabs = currentTabs
-    .filter((el) => el.groupId == -1)
+    .filter((el) => el.groupId === TAB_GROUP_ID_NONE)
     .filter((el) => el.url.startsWith("http"))
 
     let unGroupedTabsByHostname = groupByHost(unGroupedTabs)

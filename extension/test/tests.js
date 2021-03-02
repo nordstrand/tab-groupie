@@ -25,6 +25,11 @@ it('hostToCustomGroup should not match domain prefix',  () => {
     assert(null === hostToCustomGroup("vw.com.evil.com", customGroups))
 });
 
+it('hostToCustomGroup should trim whitespace from domains',  () => {
+    assert("agrp" === hostToCustomGroup("bmw.com",  [{name: 'agrp', domains: "vw.com, bmw.com  "}],))
+});
+
+
 it('getGroupingActions should return no action for one ungrouped tab',  () => {
 
     let currentTabs = [{id: 1,  groupId: -1, url: "https://vw.com"}]
