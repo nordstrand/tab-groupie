@@ -44,12 +44,42 @@ let group = async () => {
   let currentTabGroups = await Promise.all(getGroupIds(tabs).map(getGroupDetails))
   let customTabGroupRules = await customGroups.get()  
 
-  console.log("Looking up grouping actions to perform for tabs:", tabs.map(t => ({ id: t.id, groupId: t.groupId, url: t.url }) ))
+  console.log("Looking up grouping actions to perform for tabs:", tabs.map(t => ({ id: t.id, groupId: t.groupId, index: t.index, url: t.url }) ))
   let groupingActions = getGroupingActions(tabs, currentTabGroups, customTabGroupRules)
   console.log("Actions", groupingActions)
   
   groupingActions.forEach(executeAction)
+  sort()
 }
+
+let sort = async() => {
+  let currentWindow = await chrome.windows.getCurrent()
+  let tabs = await chrome.tabs.query({ windowId: currentWindow.id, pinned: false })  
+  let currentTabGroups = await Promise.all(getGroupIds(tabs).map(getGroupDetails))
+  let customTabGroupRules = await customGroups.get()  
+
+  var currentIndex = 0
+
+  let firstCustomGroup = customTabGroupRules.find(r => currentTabGroups.some(c => r.name === c.title))
+  if (!! firstCustomGroup) {
+    let firstCustomGroupId = currentTabGroups.find(g => g.title == firstCustomGroup.name).id
+    currentIndex = tabs.find(t => t.groupId === firstCustomGroupId).index
+  }
+
+  customTabGroupRules.forEach(customRule => {
+      let customGroup = currentTabGroups.find(g => g.title === customRule.name)
+    
+      if (!!customGroups) {
+        chrome.tabGroups.move(customGroup.id, {index: currentIndex})
+
+        currentIndex += tabs.filter(t => t.groupId === customGroup.id).length
+        console.log("Index", currentIndex)
+      }
+  })
+}
+
+
+
 
 let executeAction = (action) => {
   chrome.tabs.group({ groupId: action.groupId, tabIds: action.tabIds }, async (groupId) => {
@@ -71,12 +101,8 @@ let executeAction = (action) => {
 chrome.storage.onChanged.addListener((changes, namespace) => {
   for (var key in changes) {
     var storageChange = changes[key];
-    console.log('Storage key "%s" in namespace "%s" changed. ' +
-      'Old value was "%s", new value is "%s".',
-      key,
-      namespace,
-      JSON.stringify(storageChange.oldValue),
-      JSON.stringify(storageChange.newValue));
+    console.log('Storage key "%s" in namespace "%s" changed. Old value was %s, new value is %s.',
+      key, namespace, JSON.stringify(storageChange.oldValue),JSON.stringify(storageChange.newValue));
 
     if (key == 'mode') {
       chrome.action.setBadgeText({ text: storageChange.newValue })
