@@ -68,8 +68,8 @@ let sort = async() => {
 
   customTabGroupRules.forEach(customRule => {
       let customGroup = currentTabGroups.find(g => g.title === customRule.name)
-    
-      if (!!customGroups) {
+
+      if (!!customGroup) {
         chrome.tabGroups.move(customGroup.id, {index: currentIndex})
 
         currentIndex += tabs.filter(t => t.groupId === customGroup.id).length
