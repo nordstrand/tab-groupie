@@ -17,10 +17,10 @@ jobs:
 
       - name: install test deps
         run: |
-          cd extension/test
+          cd test
           npm install
 
       - name: run tests
         run: |
-          cd extension/test
+          cd test
           npm test
