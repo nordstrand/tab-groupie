@@ -5,28 +5,28 @@ let customGroups=[
 
 
 it('hostToCustomGroup should find group matching domain exactly',  () => {
-    assert("agrp" === hostToCustomGroup("vw.com", customGroups))
-    assert("bgrp" === hostToCustomGroup("foxnews.com", customGroups))
+    assert(0 === hostToCustomGroupIndex("vw.com", customGroups))
+    assert(1 === hostToCustomGroupIndex("foxnews.com", customGroups))
 });
 
 it('hostToCustomGroup should return null if group not found',  () => {
-    assert(null === hostToCustomGroup("whatever", customGroups))
+    assert(-1 === hostToCustomGroupIndex("whatever", customGroups))
 });
 
 it('hostToCustomGroup should treat domains in list independently',  () => {
-    assert(null === hostToCustomGroup("vw.com,b", customGroups))
+    assert(-1 === hostToCustomGroupIndex("vw.com,b", customGroups))
 });
 
 it('hostToCustomGroup should match domain suffix',  () => {
-    assert("agrp" === hostToCustomGroup("whatever.vw.com", customGroups))
+    assert(0 === hostToCustomGroupIndex("whatever.vw.com", customGroups))
 });
 
 it('hostToCustomGroup should not match domain prefix',  () => {
-    assert(null === hostToCustomGroup("vw.com.evil.com", customGroups))
+    assert(-1 === hostToCustomGroupIndex("vw.com.evil.com", customGroups))
 });
 
 it('hostToCustomGroup should trim whitespace from domains',  () => {
-    assert("agrp" === hostToCustomGroup("bmw.com",  [{name: 'agrp', domains: "vw.com, bmw.com  "}],))
+    assert(0 === hostToCustomGroupIndex("bmw.com",  [{name: 'agrp', domains: "vw.com, bmw.com  "}],))
 });
 
 
@@ -90,7 +90,7 @@ it('getGroupingActions should use customGroupRules in preference to implicit cur
 
     let actions = getGroupingActions(currentTabs, currentGroups, customGroupRules)
         
-    assert(JSON.stringify(actions) === `[{"color":"red","title":"car","tabIds":[2]}]`)
+    assert(JSON.stringify(actions) === `[{"color":"red","title":"car","matchedCustomGroupRule":0,"tabIds":[2]}]`)
 });
 
 it('getGroupingActions should reuse existing customGroup',  () => {
@@ -99,7 +99,7 @@ it('getGroupingActions should reuse existing customGroup',  () => {
                        {id: 2,  groupId: -1,  url: "https://vw.com/b"}]
     
     let currentGroups = [{id: 100, color: "red", title: "car" }]
-    let customGroupRules = [{domains: "vw.com", color:"red", name: "car" }]
+    let customGroupRules = [{domains: "vw.com", color:"red", name: "car", groupId: 100 }]
 
     let actions = getGroupingActions(currentTabs, currentGroups, customGroupRules)
         
@@ -117,5 +117,5 @@ it('getGroupingActions should create one and only one customGroup for matching h
 
     let actions = getGroupingActions(currentTabs, currentGroups, customGroupRules)
         
-    assert(JSON.stringify(actions) === `[{"color":"red","title":"car","tabIds":[1,2]}]`)
+    assert(JSON.stringify(actions) === `[{"color":"red","title":"car","matchedCustomGroupRule":0,"tabIds":[1,2]}]`)
 });

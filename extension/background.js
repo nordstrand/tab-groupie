@@ -71,21 +71,22 @@ let sort = async() => {
 
       if (!!customGroup) {
         chrome.tabGroups.move(customGroup.id, {index: currentIndex})
-
         currentIndex += tabs.filter(t => t.groupId === customGroup.id).length
-        console.log("Index", currentIndex)
       }
   })
 }
-
-
-
 
 let executeAction = (action) => {
   chrome.tabs.group({ groupId: action.groupId, tabIds: action.tabIds }, async (groupId) => {
     console.log(`Tab(s) ${action.tabIds} added to ${!!action.groupId ? "pre-existing" : "just created"} tab group ${groupId}`)
 
     if (!action.groupId) {
+
+      let applyToCustomGroups = async (fn) => customGroups.set(fn(await customGroups.get()))
+      if (action.hasOwnProperty('matchedCustomGroupRule')) {
+        applyToCustomGroups(groups => groups.map( (g, index) => index === action.matchedCustomGroupRule ? { ...g, groupId: groupId } : g))
+      }
+      
       let colorToSet = action.color || stringModuloColor(action.title)
 
       let groupOptions = {
@@ -108,51 +109,28 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       chrome.action.setBadgeText({ text: storageChange.newValue })
     }
 
+    if (key == 'customGroups') {
+      storageChange.newValue.forEach(newGroup => {
+        let oldGroup = storageChange.oldValue.find(g => g.id === newGroup.id)
+        if (!! oldGroup && ! (newGroup.name === oldGroup.name)) {
+          console.log(`Grouping rule ${oldGroup.name} is now ${newGroup.name}. Attempting reconcile tab group ${newGroup.groupId}.`)
+          if (newGroup.groupId >= 0) {
+            chrome.tabGroups.update(newGroup.groupId || -1 , { title: newGroup.name })         
+          }
+        }
+
+        if (!! oldGroup && ! (newGroup.color === oldGroup.color)) {
+          console.log(`Grouping rule ${newGroup.name} has changed color from ${oldGroup.color} to ${newGroup.color}. Attempting reconcile tab group ${newGroup.groupId}.`)
+          if (newGroup.groupId >= 0) {
+            chrome.tabGroups.update(newGroup.groupId || -1, { color: newGroup.color })
+          }
+        }
+      })
+    }
+
     chrome.runtime.sendMessage({ [key]: storageChange.newValue })
   }
 });
-
-    /*
-    if (key == 'customGroups') {
-
-
-      var nameChanged = false;
-      if (storageChange.oldValue.length === storageChange.newValue.length) {
-        storageChange.oldValue.some((oldGroup, index) => {
-          if (!(oldGroup.name === storageChange.newValue[index].name)) {
-            console.log(`Group ${oldGroup.name} is now ${storageChange.newValue[index].name}`)
-            nameChanged = true
-            chrome.tabGroups.query({ title: oldGroup.name }, (foundGroups) => {
-              foundGroups[0] && chrome.tabGroups.update(foundGroups[0].id, { title: storageChange.newValue[index].name })
-            })
-            return true
-          } else {
-            return false
-          }
-        })
-      }
-
-      if (nameChanged) {
-        return
-      }
-
-      let oldColorsByGroup = storageChange.oldValue.reduce((agg, el) => ({ ...agg, [el.name]: el.color }), {})
-      let newColorsByGroup = storageChange.newValue.reduce((agg, el) => ({ ...agg, [el.name]: el.color }), {})
-
-      for (var group in newColorsByGroup) {
-        if (!(newColorsByGroup[group] === oldColorsByGroup[group])) {
-          console.log(`Group ${group} change color from ${oldColorsByGroup[group]} to ${newColorsByGroup[group]}`)
-
-          chrome.tabGroups.query({ title: group }, (foundGroups) => {
-            foundGroups[0] && chrome.tabGroups.update(foundGroups[0].id, { color: newColorsByGroup[group] })
-          })
-          break;
-        }
-      }
-    }
-  */
-
-
 
 chrome.action.onClicked.addListener(async () => {
   if (MODE[await mode.get()] == MODE.AUTO) {

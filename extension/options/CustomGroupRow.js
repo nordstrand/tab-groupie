@@ -5,7 +5,6 @@ import { useState } from './lib/preact-hooks.js'
 const html = htm.bind(h);
 
 var indexBeeingDragged = -1
-var indexBeeingDraggedOver = -1
 
 const CustomGroupRow = (props) => {
     let group = props.group
@@ -22,11 +21,9 @@ const CustomGroupRow = (props) => {
     
     let dragEnter = () => { 
       console.log(`Drag enter ${group.name}`); 
-      indexBeeingDraggedOver = index
       onGroupChangeOrder({sourceIndex: indexBeeingDragged, destinationIndex: index});
       
       indexBeeingDragged = index
-      indexBeeingDraggedOver = -1   
     }
     
     let dragEnd = () => {
@@ -53,7 +50,7 @@ const CustomGroupRow = (props) => {
       html`<option value=${color}>${color}</option>`)}
         </select>
       </label>
-      
+      <small>${group.id}.</small>
       <label>Domains<br/>
         <input style="width: 200px;" value=${group.domains} onInput=${onGroupDomainInput} required pattern="([A-Za-z0-9\.-]+.[A-Za-z0-9]{2,3})(,[A-Za-z0-9\.-]+.[A-Za-z0-9]{2,3})*" type="text" placeholder="gm.com,vw.com,bmw.com"/>
       </label>

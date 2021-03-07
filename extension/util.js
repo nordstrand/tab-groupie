@@ -22,11 +22,11 @@ let storedField = (storageApi, fieldName) =>
   }
 })
 
-let hostToCustomGroup = (hostname, customGroups) => {
-  let g = customGroups.find(customGroup =>
+let hostToCustomGroupIndex = (hostname, customGroups) => {
+  let g = customGroups.findIndex(customGroup =>
     customGroup.domains.split(",").map(s => s.trim()).filter(x => x !== "").some(domain =>
       !!hostname.match(`${domain}$`)))
-  return !!g ? g.name : null
+  return g
 }
 
 let getHost = (tab) => new URL(tab.url).hostname  
@@ -48,6 +48,9 @@ let stringModuloColor = (s) => {
     return hash;
   }
 }
+
+let uniqueId = () =>  (Date.now().toString(36) + Math.random().toString(36).substring(2))
+
 
 let getGroupIds = (tabs) => [...new Set(tabs.map((t) => t.groupId).filter((groupId) => groupId != TAB_GROUP_ID_NONE))]
 
@@ -92,20 +95,20 @@ let getGroupingActions = (currentTabs, currentGroups, customGroupRules) => {
 
       let preexistingImplictGroup = findPrexistingImplicitGroup(currentTabs, currentGroups, hostname)
 
-      let customGroup = (() => {
-        let gName = hostToCustomGroup(hostname, customGroupRules)
-        return customGroupRules.find(g => g.name === gName)
-      })()
+      let customGroupIndex = hostToCustomGroupIndex(hostname, customGroupRules)
 
-      let prexistingCustomGroup = currentGroups.find(g => g.title === (customGroup && customGroup.name))
+      let prexistingCustomGroup = currentGroups.find(g =>  
+        (customGroupIndex != -1 && customGroupRules[customGroupIndex].groupId == g.id)) 
+      
       let tabIds = tabsForHostname.map( t => t.id )
 
       if (!! prexistingCustomGroup) {
         // Reuse existing custom group
-        actions = [...actions, {groupId: prexistingCustomGroup.id, tabIds }]
-      } else if (!! customGroup) {
-         // Create new gustom group         
-        actions = [...actions, {color: customGroup.color, title: customGroup.name, isCustom: true, tabIds}]
+        actions = [...actions, {groupId: prexistingCustomGroup.id,  tabIds}]
+      } else if (customGroupIndex != -1) {
+         // Create new custom group         
+         let customGroup = customGroupRules[customGroupIndex]
+        actions = [...actions, {color: customGroup.color, title: customGroup.name, customGroupIndex, tabIds}]
       } else  if (!! preexistingImplictGroup) {
         // Reuse existing implicitly create tab group
         actions = [...actions, {groupId: preexistingImplictGroup, tabIds}]
@@ -117,16 +120,17 @@ let getGroupingActions = (currentTabs, currentGroups, customGroupRules) => {
 
     let consolidatedCustomGroupCreating = {}
     actions.forEach( a => {
-      if(a.isCustom) {
-        consolidatedCustomGroupCreating[a.title] = {
+      if(a.hasOwnProperty("customGroupIndex")) {
+        consolidatedCustomGroupCreating[a.customGroupIndex] = {
           color: a.color,
           title: a.title,
+          matchedCustomGroupRule: a.customGroupIndex,
           tabIds: [...( consolidatedCustomGroupCreating[a.title] ? consolidatedCustomGroupCreating[a.title].tabIds : []), ...a.tabIds]
         }
       }
     })
     
 
-    return [...actions.filter(a => ! a.isCustom), ...Object.values(consolidatedCustomGroupCreating)]
+    return [...actions.filter(a => ! a.hasOwnProperty("customGroupIndex")), ...Object.values(consolidatedCustomGroupCreating)]
     
 }

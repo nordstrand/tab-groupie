@@ -74,7 +74,7 @@ const OptionsPage = (props) => {
   let setMan = _ => storage.mode.set(getKeyByValue(MODE, MODE.MAN))
   let toggleTitle = _ => storage.title.set(!title)
   let toggleColor = _ => storage.color.set(!color)
-  let onAddGroup = _ => storage.customGroups.set([...customGroups, { name: "", color: "blue", domains: "" }])
+  let onAddGroup = _ => storage.customGroups.set([...customGroups, { id: uniqueId(), name: "", color: "blue", domains: "" }])
 
 
   let platformSuperKey = navigator.platform === "MacIntel" ? String.fromCodePoint(8984) : "Ctrl"
