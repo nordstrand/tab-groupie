@@ -108,6 +108,11 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       chrome.action.setBadgeText({ text: storageChange.newValue })
     }
 
+    chrome.runtime.sendMessage({ [key]: storageChange.newValue })
+  }
+});
+
+    /*
     if (key == 'customGroups') {
 
 
@@ -145,10 +150,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         }
       }
     }
+  */
 
-    chrome.runtime.sendMessage({ [key]: storageChange.newValue })
-  }
-});
 
 
 chrome.action.onClicked.addListener(async () => {

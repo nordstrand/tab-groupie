@@ -31,11 +31,24 @@ let customGroupCallbacks = groupNumber => {
         groups.map((g, index) => index === groupNumber ? { ...g, color: e.target.value } : g)
       ),
 
-
     onGroupDomainInput: e =>
       applyToCustomGroups((groups) =>
         groups.map((g, index) => index === groupNumber ? { ...g, domains: e.target.value } : g)
-      )
+      ),
+
+    onGroupChangeOrder: async ({sourceIndex, destinationIndex}) => {
+      let customGroups = [...(await storage.customGroups.get())]
+      
+      console.log(`Previous order ${customGroups.map(g => g.name).join()}`)
+      
+      let customGroupBeeingMoved = customGroups[sourceIndex]
+      customGroups.splice(sourceIndex, 1)
+      customGroups.splice(destinationIndex, 0, customGroupBeeingMoved)
+      console.log(`New order ${customGroups.map(g => g.name).join()}`)
+      storage.customGroups.set(customGroups)
+    }
+
+
   }
 }
 
@@ -97,7 +110,7 @@ const OptionsPage = (props) => {
     <div class="options">
       <h3>Custom groups</h3>
       ${customGroups.map((group, index) =>
-    html`<${CustomGroupRow} group=${group} callbacks=${customGroupCallbacks(index)} />`
+    html`<${CustomGroupRow} group=${group} index=${index} callbacks=${customGroupCallbacks(index)} />`
   )}
       <button class="add" onClick=${onAddGroup} />
     </div>
