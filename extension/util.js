@@ -104,7 +104,7 @@ let getGroupingActions = (currentTabs, currentGroups, customGroupRules) => {
 
       if (!! prexistingCustomGroup) {
         // Reuse existing custom group
-        actions = [...actions, {groupId: prexistingCustomGroup.id,  tabIds}]
+        actions = [...actions, {groupId: prexistingCustomGroup.id, tabIds}]
       } else if (customGroupIndex != -1) {
          // Create new custom group         
          let customGroup = customGroupRules[customGroupIndex]
